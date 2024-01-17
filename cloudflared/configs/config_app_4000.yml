@@ -1,0 +1,8 @@
+tunnel: 8458a8db-b11e-4b65-a631-18786e567570
+credentials-file: 8458a8db-b11e-4b65-a631-18786e567570.json
+
+ingress:
+  - hostname: app.lonelycoder.live
+    service: http://localhost:4000
+  - service: http_status:404
+
