@@ -1,0 +1,32 @@
+
+CURPATH="$(dirname "$0")"
+cd $CURPATH
+log_file=cloudflare_log
+cleanup() {
+    echo "Cleaning up..."
+    pkill -P $$
+    wait
+    echo "Cleanup complete."
+}
+
+# Trap the EXIT signal and call the cleanup function
+trap cleanup EXIT
+
+rm "$log_file"
+./cloudflared-linux-amd64 tunnel --url http://localhost:$1 --logfile cloudflare_log  >> /dev/null 2>&1 &
+
+sleep 1
+while :; do
+    result=$(grep -o 'https://[a-zA-Z0-9.-]*\.trycloudflare\.com' "$log_file")
+    
+    if [ -n "$result" ]; then
+        echo "$result"/$2
+        break
+    fi
+    sleep 1
+done
+
+date_time=$(date +"%Y-%m-%d %H:%M:%S")
+echo "$date_time: $1 --> $result" >> host.log
+
+wait

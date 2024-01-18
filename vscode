@@ -1,0 +1,9 @@
+CURPATH="$(dirname "$0")"
+cd $CURPATH
+if [[ $1 =~ ^[0-9]+$ ]]; then
+    PORT=$1
+else
+    PORT=$(($RANDOM%1000+7000))
+fi
+VSCODE_IPC_HOOK_CLI= code-server*/bin/code-server --config config.yaml --user-data-dir vscode-user-dir  --extensions-dir vscode-extensions_dir  --bind-addr 127.0.0.1:$PORT >> /dev/null 2>&1 &
+bash cloudflared/tunnel.any ${PORT}

@@ -1,0 +1,57 @@
+DOMAIN="lonelycoder.live"
+CURPATH="$(pwd)"
+RATSPATH="$(dirname "$0")"
+PORT=$(($RANDOM%1000+7000))
+
+cleanup() {
+    echo "Cleaning up..."
+    pkill -P $$
+    wait
+    echo "Cleanup complete."
+}
+
+# Trap the EXIT signal and call the cleanup function
+trap cleanup EXIT
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <path>"
+    exit 1
+fi
+
+path="$1"
+
+if [ -d "$path" ]; then
+    # If the path is a directory, create a .zip file
+    dir=$(dirname "$path")
+    foldername=$(basename "$path")
+    cd $dir
+    zip_file="${foldername%/}.zip"
+    if [ -e "$zip_file" ]; then
+        echo "The file $zip_file already exists."
+        
+        read -p "Do you want to replace it? (y/n): " answer
+
+        if [ "$answer" == "y" ]; then
+            rm "$zip_file"
+            echo "Existing zip file deleted: $zip_file"
+            zip -r "$zip_file" "$foldername"
+            echo "Created $zip_file"
+        else
+            echo "File not replaced. Continue with the current file."
+        fi
+    else
+        zip -r "$zip_file" "$foldername"
+        echo "Created $zip_file"
+    fi
+
+elif [ -f "$path" ]; then
+    dir=$(dirname "$path")
+    foldername=$(basename "$path")
+    cd $dir
+    zip_file="${foldername}"
+fi
+
+python3 -m http.server $PORT  >> /dev/null 2>&1 &   
+cd $CURPATH
+bash cloudflared/tunnel.any ${PORT} ${zip_file}
+wait
