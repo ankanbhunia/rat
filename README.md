@@ -1,4 +1,4 @@
-# Install vscode+cloudflare
+### Install vscode+cloudflare
 ```bash
 CODE_SERVER_VERSION=4.14.1
 sysx="linux"
@@ -10,15 +10,30 @@ tar -xvf code-server.tar.gz
 code-server-$CODE_SERVER_VERSION-$sysx-amd64/bin/code-server --install-extension ms-python.python --force  --extensions-dir vscode-extensions_dir
 ```
 
-# Install cloudflare
+### Install cloudflare
 ```bash
 git clone https://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@github.com/ankanbhunia/rats2.git
 cd rats2
 chmod +x vscode share ./cloudflared/tunnel ./cloudflared/tunnel.any
 ```
 
-# Commands
+### Start a vscode instance
 
-1. ```rats2/vscode```/```rats2/vscode <PORT>```
+```bash
+./vscode --port <PORT> --JumpServer <user@host>
+```  
 
-2. ```rats2/share <FILE/FOLDER_PATH>```
+1. Get a public cloudflare URL: ```./vscode```
+2. Use JumpServer:
+```bash
+./vscode --JumpServer root@217.160.147.188
+```
+or
+```bash
+./vscode --JumpServer s2514643@daisy2.inf.ed.ac.uk
+```
+### Share a Folder/File
+
+```bash
+./share <FILE/FOLDER_PATH>
+```
