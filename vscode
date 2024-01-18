@@ -1,9 +1,42 @@
+#!/bin/bash
+
+# Default values
+JumpServer=""
+port=""
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --JumpServer)
+            shift
+            JumpServer="$1"
+            ;;
+        --port)
+            shift
+            port="$1"
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+
 CURPATH="$(dirname "$0")"
 cd $CURPATH
-if [[ $1 =~ ^[0-9]+$ ]]; then
-    PORT=$1
+
+if [ -n "$port" ]; then
+    PORT=$port
 else
     PORT=$(($RANDOM%1000+7000))
 fi
+
 VSCODE_IPC_HOOK_CLI= code-server*/bin/code-server --config config.yaml --user-data-dir vscode-user-dir  --extensions-dir vscode-extensions_dir  --bind-addr 127.0.0.1:$PORT >> /dev/null 2>&1 &
-bash cloudflared/tunnel.any ${PORT}
+if [ -n "$JumpServer" ]; then
+    ssh -R  "${PORT}":localhost:"${PORT}" -N  -o ExitOnForwardFailure=yes $JumpServer
+    echo Port ${PORT} is now available at ${JumpServer}
+else
+    bash cloudflared/tunnel.any ${PORT}
+fi
