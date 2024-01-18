@@ -12,7 +12,7 @@ cleanup() {
 # Trap the EXIT signal and call the cleanup function
 trap cleanup EXIT
 
-rm "$log_file"
+rm -f "$log_file"
 ./cloudflared-linux-amd64 tunnel --url http://localhost:$1 --logfile cloudflare_log  >> /dev/null 2>&1 &
 
 sleep 1
