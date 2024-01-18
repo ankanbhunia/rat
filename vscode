@@ -36,7 +36,6 @@ fi
 VSCODE_IPC_HOOK_CLI= code-server*/bin/code-server --config config.yaml --user-data-dir vscode-user-dir  --extensions-dir vscode-extensions_dir  --bind-addr 127.0.0.1:$PORT >> /dev/null 2>&1 &
 if [ -n "$JumpServer" ]; then
     ssh -R  "${PORT}":localhost:"${PORT}" -N  -o ExitOnForwardFailure=yes $JumpServer
-    echo Port ${PORT} is now available at ${JumpServer}
 else
     bash cloudflared/tunnel.any ${PORT}
 fi
