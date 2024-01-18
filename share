@@ -1,3 +1,4 @@
+DOMAIN="lonelycoder.live"
 CURPATH="$(pwd)"
 RATSPATH="$(dirname "$0")"
 PORT=$(($RANDOM%1000+7000))
@@ -52,5 +53,5 @@ fi
 
 python3 -m http.server $PORT  >> /dev/null 2>&1 &   
 cd $CURPATH
-bash cloudflared/tunnel.any ${PORT} ${zip_file}
+bash $RATSPATH/cloudflared/tunnel.any ${PORT} ${zip_file}
 wait
