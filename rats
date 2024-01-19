@@ -1,4 +1,5 @@
 #!/bin/bash
+RATSPATH="$(dirname "$0")"
 
 # Function to display script usage
 display_usage() {
@@ -35,15 +36,15 @@ esac
 # Execute the corresponding script with the remaining arguments
 case $action in
   share)
-    bash ./share "$@"
+    bash $RATSPATH/share "$@"
     ;;
   vscode)
-    bash ./vscode "$@"
+    bash $RATSPATH/vscode "$@"
     ;;
   tunnel)
-    bash ./cloudflared/tunnel "$@"
+    bash $RATSPATH/cloudflared/tunnel "$@"
     ;;
   tunnel.any)
-    bash ./cloudflared/tunnel.any "$@"
+    bash $RATSPATH/cloudflared/tunnel.any "$@"
     ;;
 esac
