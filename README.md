@@ -1,4 +1,4 @@
-### Install vscode+cloudflare
+### Install rats-client (and vscode)
 ```bash
 CODE_SERVER_VERSION=4.14.1
 sysx="linux"
@@ -15,7 +15,7 @@ echo "export PATH=\$PATH:$(pwd)" >> ~/.bashrc
 source ~/.bashrc
 ```
 
-### Install cloudflare
+### Install rats-client
 ```bash
 git clone https://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@github.com/ankanbhunia/rats-client.git
 cd rats-client
