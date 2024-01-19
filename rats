@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Function to display script usage
+display_usage() {
+  echo "Usage: $0 [OPTIONS] [--args [ARGS]]"
+  echo "Options:"
+  echo "  share <FILE_PATH/FOLDER_PATH>"
+  echo "  vscode --port <PORT> --JumpServer <user@host>"
+  echo "  tunnel <host_name> <port>"
+  echo "  tunnel.any <port> <path>"
+  echo "  -h, --help   Display this help message"
+  exit 1
+}
+
+# Check if the script is called with at least one argument
+if [ $# -lt 1 ]; then
+  display_usage
+fi
+
+# Parse the first argument to determine the action
+case $1 in
+  share|vscode|tunnel|tunnel.any)
+    action=$1
+    shift
+    ;;
+  -h|--help)
+    display_usage
+    ;;
+  *)
+    echo "Invalid option: $1"
+    display_usage
+    ;;
+esac
+
+# Execute the corresponding script with the remaining arguments
+case $action in
+  share)
+    bash ./share "$@"
+    ;;
+  vscode)
+    bash ./vscode "$@"
+    ;;
+  tunnel)
+    bash ./cloudflared/tunnel "$@"
+    ;;
+  tunnel.any)
+    bash ./cloudflared/tunnel.any "$@"
+    ;;
+esac

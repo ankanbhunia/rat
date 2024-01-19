@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Default values
 JumpServer=""
 port=""
@@ -22,7 +21,6 @@ while [[ $# -gt 0 ]]; do
     esac
     shift
 done
-
 
 CURPATH="$(dirname "$0")"
 cd $CURPATH

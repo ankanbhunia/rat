@@ -6,4 +6,4 @@
 #SBATCH --partition=PGR-Standard
 #SBATCH --time=2-00:00:00              # Walltime
 
-./vscode --JumpServer s2514643@daisy2.inf.ed.ac.uk --port 4062
+rats vscode --JumpServer s2514643@daisy2.inf.ed.ac.uk --port 4062
