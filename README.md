@@ -25,20 +25,20 @@ chmod +x rats
 ### Start a vscode instance
 
 ```bash
-./vscode --port <PORT> --JumpServer <user@host>
+rats vscode --port <PORT> --JumpServer <user@host>
 ```  
 
-1. Get a public cloudflare URL: ```./vscode```
+1. Get a public cloudflare URL: ```rats vscode```
 2. Use JumpServer:
 ```bash
-./vscode --JumpServer root@217.160.147.188
+rats vscode --JumpServer root@217.160.147.188
 ```
 or
 ```bash
-./vscode --JumpServer s2514643@daisy2.inf.ed.ac.uk
+rats vscode --JumpServer s2514643@daisy2.inf.ed.ac.uk
 ```
 ### Share a Folder/File
 
 ```bash
-./share <FILE/FOLDER_PATH>
+rats share <FILE/FOLDER_PATH>
 ```
