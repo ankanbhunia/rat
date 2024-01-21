@@ -11,9 +11,9 @@ while [[ $# -gt 0 ]]; do
             shift
             port="$1"
             ;;
-        --subdomain)
+        --domain)
             shift
-            host="$1"
+            domain="$1"
             ;;
         --subpage_path)
             shift
@@ -45,13 +45,13 @@ cleanup() {
 trap cleanup EXIT
 
 if [ ! -n "$port" ]; then
-    echo "Usage: $0 --port <PORT> [--subdomain <SUBDOMAIN>] [--subpage_path <PATH>]"
+    echo "Usage: $0 --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>]"
     exit 1
 fi
 
-if [ -n "$host" ]; then
+if [ -n "$domain" ]; then
 
-  TUNNEL_NAME=${host}_${port}
+  TUNNEL_NAME=${domain}_${port}
   mkdir -p tunnels/${TUNNEL_NAME}
 
   ./cloudflared-linux-amd64 tunnel --credentials-file tunnels/${TUNNEL_NAME}/creds.json create ${TUNNEL_NAME}
@@ -63,24 +63,24 @@ if [ -n "$host" ]; then
 credentials-file: tunnels/${TUNNEL_NAME}/creds.json
 
 ingress:
-  - hostname: ${host}.${DOMAIN}
+  - hostname: ${domain}
     service: http://localhost:${port}
   - service: http_status:404
   """
-  echo "$yaml_content" > tunnels/${TUNNEL_NAME}/config_${host}_${port}.yml
-  ./cloudflared-linux-amd64 tunnel route dns ${tunnel_id} ${host}.${DOMAIN}
+  echo "$yaml_content" > tunnels/${TUNNEL_NAME}/config_${domain}.yml
+  ./cloudflared-linux-amd64 tunnel route dns ${tunnel_id} ${domain}
 
   date_time=$(date +"%Y-%m-%d %H:%M:%S")
-  echo "$date_time: $1 --> https://${host}.${DOMAIN}" >> host.log
+  echo "$date_time: $1 --> https://${domain}" >> host.log
 
   highlight_url() {
       echo -e "\e[34m$1\e[0m"
   }
   echo '###############################'
-  echo $(highlight_url "https://${host}.${DOMAIN}/${subpage_path}")
+  echo $(highlight_url "https://${domain}/${subpage_path}")
   echo '###############################'
 
-  ./cloudflared-linux-amd64 tunnel --config  tunnels/${TUNNEL_NAME}/config_${host}_${port}.yml run ${tunnel_id}
+  ./cloudflared-linux-amd64 tunnel --config  tunnels/${TUNNEL_NAME}/config_${domain}.yml run ${tunnel_id}
 
 else 
 
