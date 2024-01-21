@@ -25,7 +25,7 @@ rat/vscode [--port <PORT>] [--JumpServer <user@host>] [--subdomain <subdomain>]
 
 1. Get a public cloudflare URL: ```rat/vscode```
 2. Get a fixed subdomain: ```rat/vscode --subdomain desktop.lonelycoder.live```
-3. Use JumpServer:
+3. Using a JumpServer:
 ```bash
 rat/vscode --JumpServer root@217.160.147.188
 ```
