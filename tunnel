@@ -1,8 +1,7 @@
 #!/bin/bash
-DOMAIN="lonelycoder.live"
 
 port=""
-subdomain=""
+domain=""
 subpage_path=""
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
