@@ -40,7 +40,7 @@ VSCODE_IPC_HOOK_CLI= code-server*/bin/code-server --config config.yaml --user-da
 if [ -n "$JumpServer" ]; then
     echo reverse-tunneling port $PORT...
     ssh -R  "${PORT}":localhost:"${PORT}" -N  -o ExitOnForwardFailure=yes $JumpServer
-elif [ -n "$subdomain" ]; then
+elif [ -n "$domain" ]; then
     export TUNNEL_ORIGIN_CERT=cert.pem | bash tunnel --domain ${domain} --port ${PORT}
 else
     bash tunnel --port ${PORT}
