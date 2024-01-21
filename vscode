@@ -2,7 +2,7 @@
 # Default values
 JumpServer=""
 port=""
-subdomain=""
+domain=""
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -15,9 +15,9 @@ while [[ $# -gt 0 ]]; do
             shift
             port="$1"
             ;;
-        --subdomain)
+        --domain)
             shift
-            subdomain="$1"
+            domain="$1"
             ;;
         *)
             echo "Unknown option: $1"
@@ -41,7 +41,7 @@ if [ -n "$JumpServer" ]; then
     echo reverse-tunneling port $PORT...
     ssh -R  "${PORT}":localhost:"${PORT}" -N  -o ExitOnForwardFailure=yes $JumpServer
 elif [ -n "$subdomain" ]; then
-    export TUNNEL_ORIGIN_CERT=cert.pem | bash tunnel --subdomain ${subdomain} --port ${PORT}
+    export TUNNEL_ORIGIN_CERT=cert.pem | bash tunnel --domain ${domain} --port ${PORT}
 else
     bash tunnel --port ${PORT}
 fi
