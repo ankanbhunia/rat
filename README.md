@@ -45,3 +45,12 @@ rat/share --path <FILE/FOLDER_PATH>
 rat/tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>]
 ```
 
+### CloudFlare Domain Setup
+1. Register for a new domain.
+2. Add a new website (the registered domain) to https://dash.cloudflare.com/.
+3. Change Nameservers in the domain register site.
+4. Create a cert.pem using ```cloudflare login```
+5. Done!
+
+
+
