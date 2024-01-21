@@ -1,15 +1,15 @@
 #!/bin/bash
 # Default values
-JumpServer=""
+jumpserver=""
 port=""
 domain=""
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --JumpServer)
+        --jumpserver)
             shift
-            JumpServer="$1"
+            jumpserver="$1"
             ;;
         --port)
             shift
@@ -37,9 +37,9 @@ else
 fi
 
 VSCODE_IPC_HOOK_CLI= code-server*/bin/code-server --config config.yaml --user-data-dir vscode-user-dir  --extensions-dir vscode-extensions_dir  --bind-addr 127.0.0.1:$PORT >> /dev/null 2>&1 &
-if [ -n "$JumpServer" ]; then
+if [ -n "$jumpserver" ]; then
     echo reverse-tunneling port $PORT...
-    ssh -R  "${PORT}":localhost:"${PORT}" -N  -o ExitOnForwardFailure=yes $JumpServer
+    ssh -R  "${PORT}":localhost:"${PORT}" -N  -o ExitOnForwardFailure=yes $jumpserver
 elif [ -n "$domain" ]; then
     export TUNNEL_ORIGIN_CERT=cert.pem | bash tunnel --domain ${domain} --port ${PORT}
 else
