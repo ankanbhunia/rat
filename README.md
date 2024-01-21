@@ -23,16 +23,22 @@ chmod -R +x rat
 rat/vscode [--port <PORT>] [--JumpServer <user@host>] [--domain <domain>]
 ```  
 
-1. Get a public cloudflare URL: ```rat/vscode```
-2. Get a fixed domain: ```rat/vscode --domain desktop.lonelycoder.live``` (see later for setup)
-3. Using a JumpServer:
+1. Get a public cloudflare URL:
+   
+```bash
+rat/vscode
+```
+3. Get a fixed domain:
+   
+```bash
+rat/vscode --domain desktop.lonelycoder.live
+```
+4. Using a JumpServer:
 ```bash
 rat/vscode --JumpServer root@217.160.147.188
-```
-or
-```bash
 rat/vscode --JumpServer s2514643@daisy2.inf.ed.ac.uk
 ```
+
 ### Share a Folder/File
 
 ```bash
