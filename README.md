@@ -20,11 +20,11 @@ chmod -R +x rat
 ### Start a vscode instance
 
 ```bash
-rat/vscode [--port <PORT>] [--JumpServer <user@host>] [--subdomain <subdomain>]
+rat/vscode [--port <PORT>] [--JumpServer <user@host>] [--domain <domain>]
 ```  
 
 1. Get a public cloudflare URL: ```rat/vscode```
-2. Get a fixed subdomain: ```rat/vscode --subdomain desktop.lonelycoder.live```
+2. Get a fixed domain: ```rat/vscode --domain desktop.lonelycoder.live``` (see later for setup)
 3. Using a JumpServer:
 ```bash
 rat/vscode --JumpServer root@217.160.147.188
@@ -42,6 +42,6 @@ rat/share --path <FILE/FOLDER_PATH>
 ### Tunnel a Port
 
 ```bash
-rat/tunnel --port <PORT> [--subdomain <SUBDOMAIN>] [--subpage_path <PATH>]
+rat/tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>]
 ```
 
