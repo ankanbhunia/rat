@@ -51,7 +51,7 @@ rat/share --path <FILE/FOLDER_PATH>
 rat/tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol <http/ssh>]
 ```
 
-## Make any machine ssh-accessible
+## Make any linux-machine ssh-accessible
 
 1 (server-side). Requirements: install openssh-server
 ```bash
@@ -77,6 +77,12 @@ ssh ankan@my-home-network.lonelycoder.live
 Alternatively, in one line -
 ```bash
 ssh -o ProxyCommand='cloudflared access ssh --hostname %h' ankan@my-home-network.lonelycoder.live
+```
+
+## Use any ssh-accessible linux-machine as VPN using sshuttle
+
+```bash
+sshuttle -r ankan@my-home-network.lonelycoder.live -x my-home-network.lonelycoder.live --no-latency-control 0/0
 ```
 
 ## CloudFlare Domain Setup
