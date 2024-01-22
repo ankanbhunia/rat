@@ -63,12 +63,14 @@ sudo systemctl enable ssh
 ```bash
 rat/tunnel --port 22 --domain my-home-network.lonelycoder.live --protocol ssh
 ```
-3 (client-side). Add the following lines to  ```./ssh/config```
+3 (client-side). Requirements: install cloudflared (https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-local-tunnel/).
+
+4 (client-side). Add the following lines to  ```./ssh/config```
 ```bash
 Host my-home-network.lonelycoder.live
          ProxyCommand cloudflared access ssh --hostname %h
 ```
-3 (client-side). Connect via ssh:
+5 (client-side). Connect via ssh:
 ```bash
 ssh ankan@my-home-network.lonelycoder.live
 ```
