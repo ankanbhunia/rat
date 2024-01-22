@@ -63,6 +63,8 @@ sudo systemctl enable ssh
 ```bash
 rat/tunnel --port 22 --domain my-home-network.lonelycoder.live --protocol ssh
 ```
+ (optional) run the above line at server startup. To do that use```crontab -e``` --> add ```@reboot sleep 60 && <rat/tunnel ... >```
+
 3 (client-side). Requirements: install cloudflared (https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-local-tunnel/).
 
 4 (client-side). Add the following lines to  ```./ssh/config```
@@ -78,6 +80,7 @@ Alternatively, in one line -
 ```bash
 ssh -o ProxyCommand='cloudflared access ssh --hostname %h' ankan@my-home-network.lonelycoder.live
 ```
+
 
 ## Use any ssh-accessible linux-machine as VPN using sshuttle
 
