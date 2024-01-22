@@ -82,7 +82,7 @@ ssh -o ProxyCommand='cloudflared access ssh --hostname %h' ankan@my-home-network
 ```
 
 
-## Use any ssh-accessible linux-machine as VPN using sshuttle
+## Use any linux-machine as VPN
 
 ```bash
 sshuttle -r ankan@my-home-network.lonelycoder.live -x my-home-network.lonelycoder.live --no-latency-control 0/0
