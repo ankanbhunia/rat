@@ -34,6 +34,7 @@ done
 
 CURPATH="$(dirname "$0")"
 cd $CURPATH
+export TUNNEL_ORIGIN_CERT=cert.pem 
 echo $(pwd)
 
 cleanup() {
