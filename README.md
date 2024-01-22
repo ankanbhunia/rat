@@ -84,6 +84,8 @@ ssh -o ProxyCommand='cloudflared access ssh --hostname %h' ankan@my-home-network
 
 ## Use any linux-machine as VPN
 
+Save this code in a file i.e., ```home_network.sh``` and run ```bash home_network.sh``` to start the VPN. 
+
 ```bash
 sshuttle -r ankan@my-home-network.lonelycoder.live -x my-home-network.lonelycoder.live --no-latency-control 0/0
 ```
