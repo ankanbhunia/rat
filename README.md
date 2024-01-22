@@ -1,4 +1,4 @@
-### Install @rat (and vscode)
+## Install @rat (and vscode)
 ```bash
 CODE_SERVER_VERSION=4.20.0
 sysx="linux"
@@ -11,13 +11,13 @@ code-server-$CODE_SERVER_VERSION-$sysx-amd64/bin/code-server --install-extension
 ```
 
 
-### Install @rat
+## Install @rat
 ```bash
 git clone https://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@github.com/ankanbhunia/rat.git
 chmod -R +x rat
 ```
 
-### Start a vscode instance
+## Start a vscode instance
 
 ```bash
 rat/vscode [--port <PORT>] [--JumpServer <user@host>] [--domain <domain>]
@@ -39,19 +39,45 @@ rat/vscode --JumpServer root@217.160.147.188
 rat/vscode --JumpServer s2514643@daisy2.inf.ed.ac.uk
 ```
 
-### Share a Folder/File
+## Share a Folder/File
 
 ```bash
 rat/share --path <FILE/FOLDER_PATH>
 ```
 
-### Tunnel a Port
+## Tunnel a Port
 
 ```bash
-rat/tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>]
+rat/tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol <http/ssh>]
 ```
 
-### CloudFlare Domain Setup
+## Make any machine ssh-accessible
+
+1 (server-side). Requirements: install openssh-server
+```bash
+sudo apt install openssh-server
+sudo systemctl start ssh
+sudo systemctl enable ssh
+```
+2 (server-side). Start ssh-tunneling -
+```bash
+rat/tunnel --port 22 --domain my-home-network.lonelycoder.live --protocol ssh
+```
+3 (client-side). Add the following lines to  ```./ssh/config```
+```bash
+Host my-home-network.lonelycoder.live
+         ProxyCommand cloudflared access ssh --hostname %h
+```
+3 (client-side). Connect via ssh:
+```bash
+ssh ankan@my-home-network.lonelycoder.live
+```
+Alternatively, in one line -
+```bash
+ssh -o ProxyCommand='cloudflared access ssh --hostname %h' ankan@my-home-network.lonelycoder.live
+```
+
+## CloudFlare Domain Setup
 1. Register for a new domain.
 2. Add a new website (the registered domain) to https://dash.cloudflare.com/.
 3. Change Nameservers in the domain register site.
