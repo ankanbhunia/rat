@@ -41,7 +41,7 @@ if [ -n "$jumpserver" ]; then
     echo reverse-tunneling port $PORT...
     ssh -R  "${PORT}":localhost:"${PORT}" -N  -o ExitOnForwardFailure=yes $jumpserver
 elif [ -n "$domain" ]; then
-    export TUNNEL_ORIGIN_CERT=cert.pem | bash tunnel --domain ${domain} --port ${PORT}
+    bash tunnel --domain ${domain} --port ${PORT}
 else
     bash tunnel --port ${PORT}
 fi
