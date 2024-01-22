@@ -3,6 +3,7 @@
 port=""
 domain=""
 subpage_path=""
+protocol="http"
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -13,6 +14,10 @@ while [[ $# -gt 0 ]]; do
         --domain)
             shift
             domain="$1"
+            ;;
+        --protocol)
+            shift
+            protocol="$1"
             ;;
         --subpage_path)
             shift
@@ -63,7 +68,7 @@ credentials-file: tunnels/${TUNNEL_NAME}/creds.json
 
 ingress:
   - hostname: ${domain}
-    service: http://localhost:${port}
+    service: ${protocol}://localhost:${port}
   - service: http_status:404
   """
   echo "$yaml_content" > tunnels/${TUNNEL_NAME}/config_${port}.yml
