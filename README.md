@@ -87,7 +87,8 @@ ssh -o ProxyCommand='cloudflared access ssh --hostname %h' ankan@my-home-network
 Save this code in a file i.e., ```home_network.sh``` and run ```bash home_network.sh``` to start the VPN. 
 
 ```bash
-sshuttle  -e "ssh -q -o ProxyCommand='cloudflared access ssh --hostname %h'" -r ankan@my-home-network.lonelycoder.live -x my-home-network.lonelycoder.live --no-latency-control 0/0
+sshuttle  -e "ssh -q -o ProxyCommand='cloudflared access ssh --hostname %h'"\
+ -r ankan@my-home-network.lonelycoder.live -x my-home-network.lonelycoder.live --no-latency-control 0/0
 ```
 
 ## CloudFlare Domain Setup
