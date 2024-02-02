@@ -54,7 +54,7 @@ rat/tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol
 ## Download a file or git clone using a jumphost
 
 ```bash
-rat/wget --url <URL> [--JumpServer <user@host>]
+rat/wget --url <DOWLOAD_URL/GITHUB_REPO_URL> [--JumpServer <user@host>]
 ```
 
 ## Make any linux-machine ssh-accessible
