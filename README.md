@@ -51,6 +51,12 @@ rat/share --path <FILE/FOLDER_PATH>
 rat/tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol <http/ssh>]
 ```
 
+## Download a file or git clone using a jumphost
+
+```bash
+rat/wget --url <URL> [--JumpServer <user@host>]
+```
+
 ## Make any linux-machine ssh-accessible
 
 1 (server-side). Requirements: install openssh-server
