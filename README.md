@@ -31,7 +31,7 @@ rat/vscode
 3. Get a fixed domain:
    
 ```bash
-rat/vscode --domain desktop.lonelycoder.live
+rat/vscode --domain desktop.runs.space
 ```
 4. Using a JumpServer:
 ```bash
@@ -67,7 +67,7 @@ sudo systemctl enable ssh
 ```
 2 (server-side). Start ssh-tunneling -
 ```bash
-rat/tunnel --port 22 --domain my-home-network.lonelycoder.live --protocol ssh
+rat/tunnel --port 22 --domain my-home-network.runs.space --protocol ssh
 ```
    Add this to ```crontab -e``` --> add ```@reboot sleep 60 && <rat/tunnel ... >```
 
@@ -75,16 +75,16 @@ rat/tunnel --port 22 --domain my-home-network.lonelycoder.live --protocol ssh
 
 4 (client-side). Add the following lines to  ```./ssh/config```
 ```bash
-Host my-home-network.lonelycoder.live
+Host my-home-network.runs.space
          ProxyCommand cloudflared access ssh --hostname %h
 ```
 5 (client-side). Connect via ssh:
 ```bash
-ssh ankan@my-home-network.lonelycoder.live
+ssh ankan@my-home-network.runs.space
 ```
 Alternatively, in one line -
 ```bash
-ssh -o ProxyCommand='cloudflared access ssh --hostname %h' ankan@my-home-network.lonelycoder.live
+ssh -o ProxyCommand='cloudflared access ssh --hostname %h' ankan@my-home-network.runs.space
 ```
 
 
@@ -94,7 +94,7 @@ Save this code in a file i.e., ```home_network.sh``` and run ```bash home_networ
 
 ```bash
 sshuttle  -e "ssh -q -o ProxyCommand='cloudflared access ssh --hostname %h'"\
- -r ankan@my-home-network.lonelycoder.live -x my-home-network.lonelycoder.live --no-latency-control 0/0
+ -r ankan@my-home-network.runs.space -x my-home-network.runs.space --no-latency-control 0/0
 ```
 
 ## CloudFlare Domain Setup
