@@ -97,6 +97,13 @@ sshuttle  -e "ssh -q -o ProxyCommand='cloudflared access ssh --hostname %h'"\
  -r ankan@my-home-network.runs.space -x my-home-network.runs.space --no-latency-control 0/0
 ```
 
+
+## Share internet via Proxy
+```bash
+echo -e 'export http_proxy=http://localhost:3128\nexport https_proxy=http://localhost:3128' >> ~/.bashrc && source ~/.bashrc
+ssh -L 3128:localhost:3128 s2514643@vico02.inf.ed.ac.uk 'fuser -k 3128/tcp; python3 -m proxy --port 3128'
+```
+
 ## CloudFlare Domain Setup
 1. Register for a new domain.
 2. Add a new website (the registered domain) to https://dash.cloudflare.com/.
