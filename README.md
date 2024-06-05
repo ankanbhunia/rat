@@ -2,7 +2,7 @@
 ```bash
 CODE_SERVER_VERSION=4.20.0
 sysx="linux"
-git clone https://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@github.com/ankanbhunia/rat.git
+git clone https://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@github.com/ankanbhunia/rat.git
 chmod -R +x rat
 cd rat
 curl -fL https://github.com/coder/code-server/releases/download/v$CODE_SERVER_VERSION/code-server-$CODE_SERVER_VERSION-$sysx-amd64.tar.gz > code-server.tar.gz
@@ -13,7 +13,7 @@ code-server-$CODE_SERVER_VERSION-$sysx-amd64/bin/code-server --install-extension
 
 ## Install @rat
 ```bash
-git clone https://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@github.com/ankanbhunia/rat.git
+git clone https://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@github.com/ankanbhunia/rat.git
 chmod -R +x rat
 ```
 
