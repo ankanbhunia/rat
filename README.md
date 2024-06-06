@@ -170,7 +170,9 @@ pip3 install 'git+https://github.com/facebookresearch/detectron2.git'
 ```
 apptainer build  mltoolkit-cuda12.1_build.sif mltoolkit-cuda12.1_build 
 ```
-
+```
+echo ". /opt/conda/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
+```
 output file is ```mltoolkit-cuda12.1_build.sif``` 
 
 Download link - [https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_uk/Documents/Containers/mltoolkit-cuda12.1_build.sif?csf=1&web=1&e=rVDbcZ](https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_uk/Documents/Containers/mltoolkit-cuda12.1_build.sif?csf=1&web=1&e=rVDbcZ)
