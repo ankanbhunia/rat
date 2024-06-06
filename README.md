@@ -193,6 +193,13 @@ CONTAINER_PATH=/disk/scratch/s2514643/envs/
 apptainer shell --nv --overlay $CONTAINER_PATH/overlay.img --fakeroot --bind /disk/scratch/ $CONTAINER_PATH/mltoolkit-cuda12.1_build.sif
 bash ~/rat/vscode --jumpserver s2514643@vico02.inf.ed.ac.uk --port 4080
 ```
+### Use Apptainer for debugging 
 
+```bash
+CONTAINER_PATH=/disk/scratch/s2514643/envs/
+apptainer run --nv --overlay $CONTAINER_PATH/overlay2.img --fakeroot --bind /disk/scratch/ $CONTAINER_PATH/mltoolkit-cuda12.1_build.sif 
+conda activate main
+python -m debugpy --listen localhost:5671 -m torch.distributed.launch --nproc_per_node=1 --master_port 48949 train.py
+```
 
 
