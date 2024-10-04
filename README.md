@@ -104,6 +104,10 @@ echo -e 'export http_proxy=http://localhost:3128\nexport https_proxy=http://loca
 ssh -L 3128:localhost:3128 s2514643@vico02.inf.ed.ac.uk 'fuser -k 3128/tcp; python3 -m proxy --port 3128'
 ```
 
+## Use a Jumphost to expose a port (in case exposing port is blocked in a machine)
+```bash
+ssh -R 8000:localhost:8000 s2514643@daisy2.inf.ed.ac.uk /disk/nfs/gazinasvolume2/s2514643/rat/tunnel --port 8000 --domain viser-host.runs.space
+```
 ## CloudFlare Domain Setup
 1. Register for a new domain.
 2. Add a new website (the registered domain) to https://dash.cloudflare.com/.
