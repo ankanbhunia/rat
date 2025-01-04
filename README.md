@@ -1,4 +1,11 @@
 ## Install @rat (and vscode)
+
+```bash
+wget https://huggingface.co/ankankbhunia/vscode-setup/resolve/main/rat.zip
+unzip rat.zip
+```
+
+Manually - 
 ```bash
 CODE_SERVER_VERSION=4.20.0
 sysx="linux"
