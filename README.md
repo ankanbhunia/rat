@@ -1,8 +1,8 @@
 ## Install @rat (and vscode)
 
 ```bash
-wget https://huggingface.co/ankankbhunia/vscode-setup/resolve/main/rat.zip
-unzip rat.zip
+https://huggingface.co/ankankbhunia/vscode-setup/resolve/main/rat-4.96.2.zip
+unzip rat-4.96.2.zip -d rat
 ```
 
 Manually - 
