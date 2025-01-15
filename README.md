@@ -213,4 +213,87 @@ conda activate main
 python -m debugpy --listen localhost:5671 -m torch.distributed.launch --nproc_per_node=1 --master_port 48949 train.py
 ```
 
+### sbatch file job.sh
 
+```bash
+#!/bin/bash
+
+# Default values
+DEFAULT_GPU_NOS=1
+DEFAULT_CPU_NOS=20
+DEFAULT_DOMAIN_USERNAME="crannog0x"
+DEFAULT_NODE="crannog"
+
+# Function to display help message
+show_help() {
+    echo "Usage: bash job.sh {node_ids} {gpu_nos} {cpu_nos} {domain_username} {node_name}"
+    echo
+    echo "Arguments:"
+    echo "  node_ids         Comma-separated list of node IDs (e.g., 01,02,03)"
+    echo "  gpu_nos          Number of GPUs required (default: $DEFAULT_GPU_NOS)"
+    echo "  cpu_nos          Number of CPUs required (default: $DEFAULT_CPU_NOS)"
+    echo "  domain_username  Domain username (default: $DEFAULT_DOMAIN_USERNAME)"
+    echo "  node_name        Node name prefix (default: $DEFAULT_NODE, options: [damnii, crannog])"
+    echo
+    echo "Options:"
+    echo "  -h, --help       Show this help message and exit"
+    echo "  --usage          Show GPU usage summary and exit"
+    echo
+    echo "Example:"
+    echo "  bash job.sh 01,02,03 1 20 crannog0x crannog"
+}
+
+# Function to summarize GPU usage on each node
+summarize_gpu_usage() {
+    squeue | grep -E 'crannog|damnii' | awk '{print $NF}' | sort | uniq -c | awk '{print "Node: " $2 ", GPUs: " $1}'
+}
+
+# Check if help or usage is requested
+if [[ "$1" == "-h" || "$1" == "--help" || $# -eq 0 ]]; then
+    show_help
+    exit 0
+elif [[ "$1" == "--usage" ]]; then
+    summarize_gpu_usage
+    exit 0
+fi
+
+# Read command-line arguments
+NODE_IDS=$1
+GPU_NOS=${2:-$DEFAULT_GPU_NOS}
+CPU_NOS=${3:-$DEFAULT_CPU_NOS}
+DOMAIN_USERNAME=${4:-$DEFAULT_DOMAIN_USERNAME}
+NODE_NAME=${5:-$DEFAULT_NODE}
+
+# Create a temporary SLURM script
+TEMP_SCRIPT=$(mktemp)
+
+# Construct the nodelist
+NODE_LIST=$(echo $NODE_IDS | sed "s/,/,${NODE_NAME}/g")
+NODE_LIST="${NODE_NAME}${NODE_LIST}"
+
+cat <<EOT > $TEMP_SCRIPT
+#!/bin/bash
+#SBATCH --job-name=lnnexp           # Job name
+#SBATCH --nodes=1
+#SBATCH --nodelist=${NODE_LIST}     # Node list
+#SBATCH --gres=gpu:${GPU_NOS}       # Number of GPUs required
+#SBATCH --cpus-per-task=${CPU_NOS}  # Number of CPUs required
+#SBATCH --partition=PGR-Standard
+#SBATCH --time=7-00:00:00           # Walltime
+
+# echo -e 'export http_proxy=http://localhost:3128\nexport https_proxy=http://localhost:3128' >> ~/.bashrc && source ~/.bashrc
+ssh -L 3128:localhost:3128 -N ${USER}@vico02.inf.ed.ac.uk &
+
+bash rat/vscode --jumpserver ${USER}@vico02.inf.ed.ac.uk --domain ${DOMAIN_USERNAME}.runs.space
+EOT
+
+# Print the generated SLURM script for reference
+echo "Generated SLURM script:"
+cat $TEMP_SCRIPT
+
+# Submit the temporary SLURM script
+sbatch $TEMP_SCRIPT
+
+# Clean up the temporary script
+rm $TEMP_SCRIPT
+```
