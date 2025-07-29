@@ -122,6 +122,18 @@ ssh -R 8000:localhost:8000 s2514643@daisy2.inf.ed.ac.uk /disk/nfs/gazinasvolume2
 4. Create a cert.pem using ```cloudflare login```
 5. Done!
 
+
+## Install Zellij (tmux alternative)
+
+```bash
+wget https://github.com/zellij-org/zellij/releases/download/v0.42.2/zellij-x86_64-unknown-linux-musl.tar.gz
+tar -xvf zellij-x86_64-unknown-linux-musl.tar.gz
+mkdir -p ~/.local/bin
+mv ./zellij ~/.local/bin/
+chmod +x ~/.local/bin/zellij
+rm zellij-x86_64-unknown-linux-musl.tar.gz
+```
+
 ## Sample DockerFile for cuda+conda setup
 
 ```DockerFile
@@ -188,7 +200,7 @@ output file is ```mltoolkit-cuda12.1_build.sif```
 
 Download link - [https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_uk/Documents/Containers/mltoolkit-cuda12.1_build.sif?csf=1&web=1&e=rVDbcZ](https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_uk/Documents/Containers/mltoolkit-cuda12.1_build.sif?csf=1&web=1&e=rVDbcZ)
 
-## Usage of Apptainer .sif container
+## Usage of Apptainer .sif container (using --overlay)
 
 ```bash
 # create overlay image of 2GB
@@ -204,6 +216,22 @@ CONTAINER_PATH=/disk/scratch/s2514643/envs/
 apptainer shell --nv --overlay $CONTAINER_PATH/overlay.img --fakeroot --bind /disk/scratch/ $CONTAINER_PATH/mltoolkit-cuda12.1_build.sif
 bash ~/rat/vscode --jumpserver s2514643@vico02.inf.ed.ac.uk --port 4080
 ```
+## Usage of Apptainer .sif container (using --sandbox)
+
+```bash
+# [STEP0] create a sandbox
+apptainer build --sandbox /raid/s2514643/mltoolkit-cuda12.1_build_v:1 mltoolkit-cuda12.1_build_v:1.sif
+
+# [USAGE, STEP1] do experiments, install packages, etc.
+apptainer shell --nv --writable --fakeroot --bind /disk/nfs/gazinasvolume2/s2514643/:/code --bind /raid/s2514643:/data /raid/s2514643/mltoolkit-cuda12.1_build_v:1
+
+# [USAGE, STEP2] start a zellij session
+zellij -s exp
+
+# [STEP3] convert sandbox to .sif (for transfer to different machine)
+apptainer build mltoolkit-cuda12.1_build_v:1.zip /raid/s2514643/mltoolkit-cuda12.1_build_v:1
+```
+
 ### Use Apptainer for debugging 
 
 ```bash
@@ -212,6 +240,8 @@ apptainer run --nv --overlay $CONTAINER_PATH/overlay2.img --fakeroot --bind /dis
 conda activate main
 python -m debugpy --listen localhost:5671 -m torch.distributed.launch --nproc_per_node=1 --master_port 48949 train.py
 ```
+
+
 
 ### sbatch file job.sh
 
