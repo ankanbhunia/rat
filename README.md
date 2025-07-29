@@ -201,6 +201,42 @@ output file is ```mltoolkit-cuda12.1_build.sif```
 Download link - 1. [https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_uk/Documents/Containers/mltoolkit-cuda12.1_build.sif?csf=1&web=1&e=rVDbcZ](https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_uk/Documents/Containers/mltoolkit-cuda12.1_build.sif?csf=1&web=1&e=rVDbcZ)
 
 2. (more recent) [https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v%3A1.sif](https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v%3A1.sif)
+
+## Login to Docker using apptainer remote login
+
+```bash
+apptainer remote login -u ankan999 oras://docker.io
+```
+
+## Download base image from docker:
+
+```bash
+apptainer pull docker://ankan999/mltoolkit-cuda12.1_build:v1
+```
+
+## Usage of Apptainer .sif container (using --sandbox)
+
+```bash
+# typically [SANDBOX_FOLDER] is a folder with high read/write speed/
+# [STEP0] create a sandbox
+apptainer build --sandbox [SANDBOX_FOLDER] mltoolkit-cuda12.1_build_v:1.sif
+
+# [USAGE, STEP1] do experiments, install packages, etc.
+apptainer shell --nv --writable --fakeroot --bind /lib/x86_64-linux-gnu \
+                --bind /disk/nfs/gazinasvolume2/s2514643/:/code \
+                --bind /raid/s2514643:/data  \
+                 [SANDBOX_FOLDER]
+
+# [USAGE, STEP2] start a zellij session (optional)
+zellij -s exp
+
+# [STEP3] convert sandbox to .sif (for transfer to different machine or upload to docker hub)
+apptainer build mltoolkit-cuda12.1_build_v:1.sif [SANDBOX_FOLDER]
+
+# [STEP4] push to github container registry (needs login using accesstoken)
+apptainer push mltoolkit-cuda12.1_build_v:1.sif oras://docker.io/ankan999/mltoolkit-cuda12.1_build:v1
+```
+
 ## Usage of Apptainer .sif container (using --overlay)
 
 ```bash
@@ -217,24 +253,7 @@ CONTAINER_PATH=/disk/scratch/s2514643/envs/
 apptainer shell --nv --overlay $CONTAINER_PATH/overlay.img --fakeroot --bind /disk/scratch/ $CONTAINER_PATH/mltoolkit-cuda12.1_build.sif
 bash ~/rat/vscode --jumpserver s2514643@vico02.inf.ed.ac.uk --port 4080
 ```
-## Usage of Apptainer .sif container (using --sandbox)
 
-```bash
-# [STEP0] create a sandbox
-apptainer build --sandbox /raid/s2514643/mltoolkit-cuda12.1_build_v:1 mltoolkit-cuda12.1_build_v:1.sif
-
-# [USAGE, STEP1] do experiments, install packages, etc.
-apptainer shell --nv --writable --fakeroot --bind /lib/x86_64-linux-gnu \
-                --bind /disk/nfs/gazinasvolume2/s2514643/:/code \
-                --bind /raid/s2514643:/data  \
-                 /raid/s2514643/mltoolkit-cuda12.1_build_v:1
-
-# [USAGE, STEP2] start a zellij session
-zellij -s exp
-
-# [STEP3] convert sandbox to .sif (for transfer to different machine)
-apptainer build mltoolkit-cuda12.1_build_v:1.zip /raid/s2514643/mltoolkit-cuda12.1_build_v:1
-```
 
 ### Use Apptainer for debugging 
 
