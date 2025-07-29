@@ -219,7 +219,7 @@ wget https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mlt
 ```bash
 # typically [SANDBOX_FOLDER] is a folder with high read/write speed/
 # [STEP0] create a sandbox
-apptainer build --sandbox [SANDBOX_FOLDER] mltoolkit-cuda12.1_build_v:1.sif
+apptainer build --sandbox [SANDBOX_FOLDER] mltoolkit-cuda12.1_build_v0.1.sif
 
 # [USAGE, STEP1] do experiments, install packages, etc.
 apptainer shell --nv --writable --fakeroot --bind /lib/x86_64-linux-gnu \
@@ -231,7 +231,7 @@ apptainer shell --nv --writable --fakeroot --bind /lib/x86_64-linux-gnu \
 zellij -s exp
 
 # [STEP3] convert sandbox to .sif (for transfer to different machine or upload to docker hub)
-apptainer build mltoolkit-cuda12.1_build_v:1.sif [SANDBOX_FOLDER]
+apptainer build mltoolkit-cuda12.1_build_v0.1.sif [SANDBOX_FOLDER]
 ```
 
 ## Usage of Apptainer .sif container (using --overlay)
