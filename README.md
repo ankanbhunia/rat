@@ -224,7 +224,10 @@ bash ~/rat/vscode --jumpserver s2514643@vico02.inf.ed.ac.uk --port 4080
 apptainer build --sandbox /raid/s2514643/mltoolkit-cuda12.1_build_v:1 mltoolkit-cuda12.1_build_v:1.sif
 
 # [USAGE, STEP1] do experiments, install packages, etc.
-apptainer shell --nv --writable --fakeroot --bind /disk/nfs/gazinasvolume2/s2514643/:/code --bind /raid/s2514643:/data /raid/s2514643/mltoolkit-cuda12.1_build_v:1
+apptainer shell --nv --writable --fakeroot --bind /lib/x86_64-linux-gnu \
+                --bind /disk/nfs/gazinasvolume2/s2514643/:/code \
+                --bind /raid/s2514643:/data  \
+                 /raid/s2514643/mltoolkit-cuda12.1_build_v:1
 
 # [USAGE, STEP2] start a zellij session
 zellij -s exp
