@@ -223,14 +223,14 @@ apptainer build --sandbox [SANDBOX_FOLDER] mltoolkit-cuda12.1_build_v0.1.sif
 
 # [USAGE, STEP1] do experiments, install packages, etc.
 apptainer shell --nv --writable --fakeroot --bind /lib/x86_64-linux-gnu \
-                --bind /disk/nfs/gazinasvolume2/s2514643/:/code \
+                --bind /disk/nfs/gazinasvolume2/s2514643/:/code \ # [mount folders]
                 --bind /raid/s2514643:/data  \
                  [SANDBOX_FOLDER]
 
 # [USAGE, STEP2] start a zellij session (optional)
 zellij -s exp
 
-# [STEP3] convert sandbox to .sif (for transfer to different machine or upload to docker hub)
+# [STEP3] convert sandbox to .sif (for transfer to different machine or upload to cloud)
 apptainer build mltoolkit-cuda12.1_build_v0.1.sif [SANDBOX_FOLDER]
 ```
 
