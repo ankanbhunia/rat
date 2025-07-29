@@ -200,7 +200,7 @@ output file is ```mltoolkit-cuda12.1_build.sif```
 
 Download link - 1. [https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_uk/Documents/Containers/mltoolkit-cuda12.1_build.sif?csf=1&web=1&e=rVDbcZ](https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_uk/Documents/Containers/mltoolkit-cuda12.1_build.sif?csf=1&web=1&e=rVDbcZ)
 
-2. (more recent) [https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v%3A1.sif](https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v%3A1.sif)
+2. (more recent) [https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif](https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif)
 
 ## Login to Docker using apptainer remote login
 
@@ -208,10 +208,10 @@ Download link - 1. [https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_
 apptainer remote login -u ankan999 oras://docker.io
 ```
 
-## Download base image from docker:
+## Download base image from huggingface:
 
 ```bash
-apptainer pull docker://ankan999/mltoolkit-cuda12.1_build:v1
+wget https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif
 ```
 
 ## Usage of Apptainer .sif container (using --sandbox)
@@ -232,9 +232,6 @@ zellij -s exp
 
 # [STEP3] convert sandbox to .sif (for transfer to different machine or upload to docker hub)
 apptainer build mltoolkit-cuda12.1_build_v:1.sif [SANDBOX_FOLDER]
-
-# [STEP4] push to github container registry (needs login using accesstoken)
-apptainer push mltoolkit-cuda12.1_build_v:1.sif oras://docker.io/ankan999/mltoolkit-cuda12.1_build:v1
 ```
 
 ## Usage of Apptainer .sif container (using --overlay)
