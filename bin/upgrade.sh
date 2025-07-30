@@ -13,7 +13,13 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
     echo "Stashing all local changes..."
-    git stash --all
+    STASH_OUTPUT=$(git stash --all 2>&1)
+    echo "$STASH_OUTPUT"
+    if echo "$STASH_OUTPUT" | grep -q "No local changes to save"; then
+        STASH_NEEDED=false
+    else
+        STASH_NEEDED=true
+    fi
 else
     echo "Aborting upgrade. Please commit or stash your changes manually."
     exit 1
@@ -24,7 +30,10 @@ git pull
 
 if [ $? -eq 0 ]; then
     echo "Git pull successful."
-
+    if [ "$STASH_NEEDED" = true ]; then
+        echo "Restoring stashed changes..."
+        git stash pop
+    fi
 else
     echo "Git pull failed. Please resolve any conflicts or check your network connection."
     exit 1
