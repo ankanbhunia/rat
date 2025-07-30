@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Get the first argument as the subcommand
+SUBCOMMAND=$1
+shift # Remove the subcommand from the arguments list
+
+# Get the absolute path of the current script's directory
+SCRIPT_ABS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+case "$SUBCOMMAND" in
+    vscode)
+        bash "$SCRIPT_ABS_DIR/bin/vscode.sh" "$@"
+        ;;
+    tunnel)
+        bash "$SCRIPT_ABS_DIR/bin/tunnel.sh" "$@"
+        ;;
+    proxy)
+        bash "$SCRIPT_ABS_DIR/bin/start_proxy.sh" "$@"
+        ;;
+    login)
+        bash "$SCRIPT_ABS_DIR/bin/login_cloudflare.sh" "$@"
+        ;;
+    job)
+        bash "$SCRIPT_ABS_DIR/bin/job.sh" "$@"
+        ;;
+    *)
+        echo "Usage: rat-cli [vscode|tunnel|proxy|login|job] [-- args <>]"
+        exit 1
+        ;;
+esac
