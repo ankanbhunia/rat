@@ -19,6 +19,7 @@ source ~/.bashrc
 ```
 
 
+
 | Command                                                                                             | Description                                                               |
 | :-------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------ |
 | 🔑 `rat-cli login`                                                                                   | Logs into your Cloudflare account and copies the necessary certificate.   |
@@ -27,6 +28,10 @@ source ~/.bashrc
 | 🔗 `rat-cli proxy --jumpserver <user@host>`                                                         | Shares internet via a remote proxy server using a jumpserver.             |
 | 🚀 `rat-cli job <node_ids> <gpu_nos> <cpu_nos> <domain_username> <node_name>`                        | Submits a SLURM job with specified resources and domain.                  |
 | 🔄 `rat-cli sync <LOCAL_PATH> <REMOTE_PATH> [--jumpserver <user@host>] [--direction <upload/download>]` | Synchronizes files/folders between local and remote.                      |
+| 🗑️ `rat-cli uninstall`                                                                               | Removes rat-cli from PATH and deletes all associated files.               |
+| ⬆️ `rat-cli upgrade`                                                                                | Upgrades rat-cli to the latest version from git and updates VSCode server/extensions. |
+| 🔄 `rat-cli install_vscode --version <VERSION> --arch <ARCHITECTURE>`                               | Installs or updates the VSCode server to a specific version and architecture. |
+                     |
 
 
 ## Make any linux-machine ssh-accessible
