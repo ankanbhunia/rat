@@ -18,74 +18,15 @@ echo 'export PATH="$(pwd):$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-### 3. Cloudflare Login
 
-This step logs you into your Cloudflare account and copies the necessary certificate for tunneling.
-
-```bash
-rat-cli login
-```
-
-### 4. Usage Examples
-
-Once the installation is complete, you can use the `rat-cli` command followed by a subcommand:
-
-#### Start a VSCode Instance
-
-```bash
-rat-cli vscode [--port <PORT>] [--jumpserver <user@host>] [--domain <domain>]
-```
-
-*   **Get a public Cloudflare URL:**
-    ```bash
-    rat-cli vscode
-    ```
-*   **Get a fixed domain:**
-    ```bash
-    rat-cli vscode --domain desktop.runs.space
-    ```
-*   **Using a JumpServer:**
-    ```bash
-    rat-cli vscode --jumpserver root@217.160.147.188
-    rat-cli vscode --jumpserver s2514643@daisy2.inf.ed.ac.uk
-    ```
-
-### 5. Tunnel a Port
-
-```bash
-rat-cli tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol <http/ssh>]
-```
-
-### 6. Share internet via Proxy
-This uses the `start_proxy.sh` script to set up an SSH tunnel and a remote proxy server. Make sure ```~/.local/bin/proxy``` exists in the jumpserver.
-
-```bash
-rat-cli proxy --jumpserver s2514643@vico02.inf.ed.ac.uk
-```
-
-
-### 7. Submit a Job (SLURM)
-
-```bash
-rat-cli job {node_ids} {gpu_nos} {cpu_nos} {domain_username} {node_name}
-```
-
-*   **Show help for `job.sh`:**
-    ```bash
-    rat-cli job --help
-    ```
-*   **Show GPU usage summary:**
-    ```bash
-    rat-cli job --usage
-    ```
-
----
-
-### 8. Share a Folder/File
-
-```bash
-rat-cli share --path <FILE/FOLDER_PATH>
-```
+| Command                                                                                             | Description                                                               |
+| :-------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------ |
+| 🔑 `rat-cli login`                                                                                   | Logs into your Cloudflare account and copies the necessary certificate.   |
+| 💻 `rat-cli vscode [--port <PORT>] [--jumpserver <user@host>] [--domain <domain>]`                 | Starts a VSCode instance, optionally with a specific port, jumpserver, or domain. |
+| 🌐 `rat-cli tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol <http/ssh>]` | Tunnels a local port to a public Cloudflare URL.                          |
+| 🔗 `rat-cli proxy --jumpserver <user@host>`                                                         | Shares internet via a remote proxy server using a jumpserver.             |
+| 🚀 `rat-cli job <node_ids> <gpu_nos> <cpu_nos> <domain_username> <node_name>`                        | Submits a SLURM job with specified resources and domain.                  |
+| 🔄 `rat-cli sync <LOCAL_PATH> <REMOTE_PATH> [--jumpserver <user@host>] [--direction <upload/download>]` | Synchronizes files/folders between local and remote.                      |
 
 
 ## Make any linux-machine ssh-accessible
