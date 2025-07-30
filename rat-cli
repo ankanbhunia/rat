@@ -23,11 +23,8 @@ case "$SUBCOMMAND" in
     job)
         bash "$SCRIPT_ABS_DIR/bin/job.sh" "$@"
         ;;
-    share)
-        bash "$SCRIPT_ABS_DIR/bin/share.sh" "$@"
-        ;;
-    wget)
-        bash "$SCRIPT_ABS_DIR/bin/wget.sh" "$@"
+    sync)
+        bash "$SCRIPT_ABS_DIR/bin/sync.sh" "$@"
         ;;
     *)
         echo "Usage: rat-cli [vscode|tunnel|proxy|login|job|share|wget] [-- args <>]"
@@ -37,6 +34,7 @@ case "$SUBCOMMAND" in
         echo "  rat-cli tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol <http/ssh>]: Tunnels a local port to a public Cloudflare URL."
         echo "  rat-cli proxy --jumpserver <user@host>: Shares internet via a remote proxy server using a jumpserver."
         echo "  rat-cli job <node_ids> <gpu_nos> <cpu_nos> <domain_username> <node_name>: Submits a SLURM job with specified resources and domain."
+        echo "  rat-cli sync <LOCAL_PATH> <REMOTE_PATH> [--jumpserver <user@host>] [--direction <upload/download>]: Synchronizes files/folders between local and remote."
         exit 1
         ;;
 esac
