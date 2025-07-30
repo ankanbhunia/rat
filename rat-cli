@@ -26,8 +26,17 @@ case "$SUBCOMMAND" in
     sync)
         bash "$SCRIPT_ABS_DIR/bin/sync.sh" "$@"
         ;;
+    uninstall)
+        bash "$SCRIPT_ABS_DIR/bin/uninstall.sh" "$SCRIPT_ABS_DIR" "$@"
+        ;;
+    upgrade)
+        bash "$SCRIPT_ABS_DIR/bin/upgrade.sh" "$@"
+        ;;
+    install_vscode)
+        bash "$SCRIPT_ABS_DIR/bin/install_vscode.sh" "$@"
+        ;;
     *)
-        echo "Usage: rat-cli [vscode|tunnel|proxy|login|job|share|wget] [-- args <>]"
+        echo "Usage: rat-cli [vscode|tunnel|proxy|login|job|sync|uninstall|upgrade|install_vscode] [-- args <>]"
         echo "Compact Usage Summary:"
         echo "  rat-cli login: Logs into your Cloudflare account and copies the necessary certificate."
         echo "  rat-cli vscode [--port <PORT>] [--jumpserver <user@host>] [--domain <domain>]: Starts a VSCode instance, optionally with a specific port, jumpserver, or domain."
@@ -35,6 +44,9 @@ case "$SUBCOMMAND" in
         echo "  rat-cli proxy --jumpserver <user@host>: Shares internet via a remote proxy server using a jumpserver."
         echo "  rat-cli job <node_ids> <gpu_nos> <cpu_nos> <domain_username> <node_name>: Submits a SLURM job with specified resources and domain."
         echo "  rat-cli sync <LOCAL_PATH> <REMOTE_PATH> [--jumpserver <user@host>] [--direction <upload/download>]: Synchronizes files/folders between local and remote."
+        echo "  rat-cli uninstall: Removes rat-cli from PATH and deletes all associated files."
+        echo "  rat-cli upgrade: Upgrades rat-cli to the latest version from git."
+        echo "  rat-cli install_vscode --version <VERSION> --arch <ARCHITECTURE>: Installs or updates the VSCode server to a specific version and architecture."
         exit 1
         ;;
 esac
