@@ -31,7 +31,7 @@ source ~/.bashrc
 | 🗑️ `rat-cli uninstall`                                                                               | Removes rat-cli from PATH and deletes all associated files.               |
 | ⬆️ `rat-cli upgrade`                                                                                | Upgrades rat-cli to the latest version from git and updates VSCode server/extensions. |
 | 🔄 `rat-cli install_vscode --version <VERSION> --arch <ARCHITECTURE>`                               | Installs or updates the VSCode server to a specific version and architecture. |
-                     |
+                     
 
 
 ## Make any linux-machine ssh-accessible
