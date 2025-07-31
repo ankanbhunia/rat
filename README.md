@@ -12,6 +12,7 @@ git clone https://github.com/ankanbhunia/rat.git
 chmod -R +x rat
 cd rat
 bash ./bin/install_vscode.sh --version 4.22.1 --arch linux-amd64
+bash ./bin/download_cloudflared.sh
 
 # Make rat-cli accessible from anywhere (for Bash users)
 echo "export PATH=\"$(pwd):\$PATH\"" >> ~/.bashrc
