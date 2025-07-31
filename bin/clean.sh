@@ -8,8 +8,8 @@ echo "Attempting to stop all running rat-cli related processes..."
 echo "Searching for and stopping processes started by rat-cli..."
 
 # Find PIDs of processes whose command line contains "rat-cli" or its sub-scripts
-# This is more robust as it checks the full command line and handles PIDs safely using an array
-PIDS_TO_KILL_ARRAY=()
+# This is more robust as it checks the full command line and handles PIDs safely using an array sw
+PIDS_TO_KILL_ARRAY=() 
 while IFS= read -r pid; do
     PIDS_TO_KILL_ARRAY+=("$pid")
 done < <(ps aux | grep -E "rat-cli|zellij|${RAT_DIR_ABS_PATH}/bin/(vscode|tunnel|start_proxy|job|sync|install_vscode|upgrade|login_cloudflare|uninstall|zellij)\.sh" | grep -v "grep" | grep -v "${BASH_SOURCE[0]}" | grep -v "rat-cli clean" | awk '{print $2}' | grep -E '^[0-9]+$')
