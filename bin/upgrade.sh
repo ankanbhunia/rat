@@ -7,25 +7,35 @@ echo "Attempting to upgrade rat-cli from the latest git release..."
 echo "Navigating to: $RAT_DIR_ABS_PATH"
 cd "$RAT_DIR_ABS_PATH" || { echo "Error: Could not navigate to $RAT_DIR_ABS_PATH. Aborting upgrade."; exit 1; }
 
-# Perform git pull with autostash to handle local changes gracefully
-read -p "This will pull the latest changes and automatically stash/restore your local modifications. Are you sure you want to continue? (y/n): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]
-then
-    echo "Upgrade cancelled."
+echo "Fetching latest changes from git repository..."
+git fetch --all
+
+if [ $? -ne 0 ]; then
+    echo -e "\e[31mError: Failed to fetch latest changes. Please check your network connection.\e[0m"
     exit 1
 fi
 
-echo "Pulling latest changes from git repository..."
-echo "Local changes will be automatically stashed and restored."
-git pull --autostash
+echo "Resetting to the latest version and cleaning untracked files (except those in .gitignore)..."
+# Discard all local tracked changes and align with the remote main branch
+git reset --hard origin/main
 
-if [ $? -eq 0 ]; then
-    echo "Git pull successful."
-else
-    echo "Git pull failed. Please resolve any conflicts or check your network connection."
-    echo "If there was a stash conflict, your changes might be in the latest stash entry. Use 'git stash show' to see them."
+if [ $? -ne 0 ]; then
+    echo -e "\e[31mError: Failed to reset local repository. Please resolve issues manually.\e[0m"
     exit 1
 fi
+
+# Remove all untracked files and directories that are NOT ignored by .gitignore
+git clean -f -d
+
+if [ $? -ne 0 ]; then
+    echo -e "\e[31mError: Failed to clean untracked files. Please resolve issues manually.\e[0m"
+    exit 1
+fi
+
+echo "Repository is now up to date with the latest remote version."
+
+# Run the cloudflared download script to ensure the latest version is present
+echo "Ensuring cloudflared-linux-amd64 is up to date..."
+bash "$RAT_DIR_ABS_PATH/bin/download_cloudflared.sh"
 
 exit 0
