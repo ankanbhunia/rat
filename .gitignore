@@ -1,4 +1,7 @@
 code-server-*/
 vscode-extensions_dir/
+vscode-user-dir/
 tunnels/
 cert.pem
+config.yaml
+host.log
