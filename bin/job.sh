@@ -1,11 +1,9 @@
 #!/bin/bash
 
 # Default values
-DEFAULT_JOB_NAME="lnnexp"
-DEFAULT_NODES=1
+DEFAULT_JOB_NAME="exp"
 DEFAULT_PARTITION="PGR-Standard"
 DEFAULT_TIME="7-00:00:00"
-DEFAULT_GPU_NOS=1
 DEFAULT_CPU_NOS=20
 
 # Function to display help message
@@ -15,12 +13,12 @@ show_help() {
     echo "             This command generates a temporary SLURM batch script and submits it."
     echo ""
     echo "Options:"
-    echo "  --node-ids <IDS>       Comma-separated list of node IDs (e.g., crannog01,crannog02). (Required)"
+    echo "  --node-ids <IDS>       Comma-separated list of node IDs (e.g., crannog01,crannog02). (Optional)"
     echo "  --name <NAME>          SLURM job name. (Default: $DEFAULT_JOB_NAME)"
-    echo "  --nodes <NUM>          Number of nodes for the job. (Default: $DEFAULT_NODES)"
+    echo "  --nodes <NUM>          Number of nodes for the job. (Optional)"
     echo "  --partition <NAME>     SLURM partition name. (Default: $DEFAULT_PARTITION)"
     echo "  --time <TIME>          SLURM walltime (e.g., 7-00:00:00). (Default: $DEFAULT_TIME)"
-    echo "  --gpu-nos <NUM>        Number of GPUs required for the job. (Default: $DEFAULT_GPU_NOS)"
+    echo "  --gpu-nos <NUM>        Number of GPUs required for the job. (Optional)"
     echo "  --cpu-nos <NUM>        Number of CPUs required for the job. (Default: $DEFAULT_CPU_NOS)"
     echo "  --domain <DOMAIN>      Full domain for the VSCode tunnel. (Required)"
     echo "  --jumpserver <SERVER>  Jumpserver address for the VSCode tunnel. (Optional)"
@@ -61,10 +59,10 @@ eval set -- "$TEMP"
 
 NODE_IDS=""
 JOB_NAME="$DEFAULT_JOB_NAME"
-NODES="$DEFAULT_NODES"
+NODES="" # Make NODES optional
 PARTITION="$DEFAULT_PARTITION"
 TIME="$DEFAULT_TIME"
-GPU_NOS="$DEFAULT_GPU_NOS"
+GPU_NOS="" # Make GPU_NOS optional
 CPU_NOS="$DEFAULT_CPU_NOS"
 DOMAIN="" # Initialize DOMAIN as empty
 JUMPSERVER="" # Initialize JUMPSERVER as empty
@@ -87,13 +85,6 @@ while true ; do
     esac
 done
 
-# Check if NODE_IDS is provided
-if [ -z "$NODE_IDS" ]; then
-    echo "Error: --node-ids is a required argument."
-    show_help
-    exit 1
-fi
-
 # Check if DOMAIN is provided
 if [ -z "$DOMAIN" ]; then
     echo "Error: --domain is a required argument."
@@ -109,8 +100,21 @@ PARENT_ABS_DIR="$(dirname "$SCRIPT_ABS_DIR")"
 # Create a temporary SLURM script
 TEMP_SCRIPT=$(mktemp)
 
-# Construct the nodelist
-NODE_LIST="$NODE_IDS"
+# Construct SLURM options conditionally
+NODE_LIST_SLURM=""
+if [ -n "$NODE_IDS" ]; then
+    NODE_LIST_SLURM="#SBATCH --nodelist=${NODE_IDS}"
+fi
+
+NODES_SLURM=""
+if [ -n "$NODES" ]; then
+    NODES_SLURM="#SBATCH --nodes=${NODES}"
+fi
+
+GPU_NOS_SLURM=""
+if [ -n "$GPU_NOS" ]; then
+    GPU_NOS_SLURM="#SBATCH --gres=gpu:${GPU_NOS}"
+fi
 
 # Construct the command for rat-cli vscode
 VSCODE_COMMAND="$PARENT_ABS_DIR/rat-cli vscode --domain \"${DOMAIN}\""
@@ -121,9 +125,9 @@ fi
 cat <<EOT > "$TEMP_SCRIPT"
 #!/bin/bash
 #SBATCH --job-name=${JOB_NAME}           # Job name
-#SBATCH --nodes=${NODES}
-#SBATCH --nodelist=${NODE_LIST}     # Node list
-#SBATCH --gres=gpu:${GPU_NOS}       # Number of GPUs required
+${NODES_SLURM}
+${NODE_LIST_SLURM}     # Node list (optional)
+${GPU_NOS_SLURM}       # Number of GPUs required (optional)
 #SBATCH --cpus-per-task=${CPU_NOS}  # Number of CPUs required
 #SBATCH --partition=${PARTITION}
 #SBATCH --time=${TIME}           # Walltime
