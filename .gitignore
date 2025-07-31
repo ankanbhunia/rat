@@ -5,3 +5,5 @@ tunnels/
 cert.pem
 config.yaml
 host.log
+cloudflared-linux-amd64
+zellij
