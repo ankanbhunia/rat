@@ -12,7 +12,7 @@ echo "Searching for and stopping processes started by rat-cli..."
 PIDS_TO_KILL_ARRAY=()
 while IFS= read -r pid; do
     PIDS_TO_KILL_ARRAY+=("$pid")
-done < <(ps aux | grep -E "rat-cli|${RAT_DIR_ABS_PATH}/bin/(vscode|tunnel|start_proxy|job|sync|install_vscode|upgrade|login_cloudflare|uninstall)\.sh" | grep -v "grep" | grep -v "${BASH_SOURCE[0]}" | grep -v "rat-cli clean" | awk '{print $2}' | grep -E '^[0-9]+$')
+done < <(ps aux | grep -E "rat-cli|zellij|${RAT_DIR_ABS_PATH}/bin/(vscode|tunnel|start_proxy|job|sync|install_vscode|upgrade|login_cloudflare|uninstall|zellij)\.sh" | grep -v "grep" | grep -v "${BASH_SOURCE[0]}" | grep -v "rat-cli clean" | awk '{print $2}' | grep -E '^[0-9]+$')
 
 if [ ${#PIDS_TO_KILL_ARRAY[@]} -eq 0 ]; then
     echo "No rat-cli related processes found."
