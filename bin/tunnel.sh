@@ -56,7 +56,7 @@ while [[ $# -gt 0 ]]; do
             help_flag=true
             ;;
         *)
-            echo "Error: Unknown option '$1'"
+            echo -e "\e[31mError: Unknown option '$1'\e[0m"
             usage
             ;;
     esac
@@ -76,6 +76,10 @@ cd "$PARENT_ABS_DIR"
 export TUNNEL_ORIGIN_CERT=cert.pem
 echo $(pwd)
 
+if [ ! -f "$TUNNEL_ORIGIN_CERT" ]; then
+    echo -e "\e[31mError: TUNNEL_ORIGIN_CERT (cert.pem) is not found. Please ensure 'rat-cli login' has been run successfully.\e[0m"
+    exit 1
+fi
 cleanup() {
     echo "Cleaning up..."
     pkill -P $$
@@ -89,7 +93,7 @@ cleanup() {
 trap cleanup EXIT
 
 if [ ! -n "$port" ]; then
-    echo "Error: --port argument is required."
+    echo -e "\e[31mError: --port argument is required.\e[0m"
     usage
 fi
 
@@ -113,7 +117,7 @@ ingress:
   echo "$yaml_content" > "$PARENT_ABS_DIR"/tunnels/${TUNNEL_NAME}/config_${port}.yml
   "$PARENT_ABS_DIR"/cloudflared-linux-amd64 tunnel route dns ${tunnel_id} ${domain}
   if [ $? -ne 0 ]; then
-    echo Error: ${domain} is registered with another Tunnel ID. Please go to CloudFlare Dashboard and the delete the CNAME record to continue. Else you can use a different subdomain address.
+    echo -e "\e[31mError: ${domain} is registered with another Tunnel ID. Please go to CloudFlare Dashboard and the delete the CNAME record to continue. Else you can use a different subdomain address.\e[0m"
     exit 1  # Exit with an error code
   fi
   date_time=$(date +"%Y-%m-%d %H:%M:%S")
