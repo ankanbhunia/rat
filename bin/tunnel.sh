@@ -127,7 +127,7 @@ ingress:
       echo -e "\e[34m$1\e[0m"
   }
   echo '###############################'
-  echo $(highlight_url "https://${domain}/${subpage_path}")
+  echo $(highlight_url "${protocol}://${domain}/${subpage_path}")
   echo '###############################'
 
   "$PARENT_ABS_DIR"/cloudflared-linux-amd64 tunnel --config  "$PARENT_ABS_DIR"/tunnels/${TUNNEL_NAME}/config_${port}.yml run ${tunnel_id}
