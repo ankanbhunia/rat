@@ -1,3 +1,4 @@
 code-server-*/
 vscode-extensions_dir/
 tunnels/
+cert.pem
