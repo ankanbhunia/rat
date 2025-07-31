@@ -26,13 +26,14 @@ source ~/.bashrc
 | 💻 `rat-cli vscode [--port <PORT>] [--jumpserver <user@host>] [--domain <domain>]`                 | Starts a VSCode instance, optionally with a specific port, jumpserver, or domain. |
 | 🌐 `rat-cli tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol <http/ssh>]` | Tunnels a local port to a public Cloudflare URL.                          |
 | 🔗 `rat-cli proxy --jumpserver <user@host>`                                                         | Shares internet via a remote proxy server using a jumpserver.             |
-| 🚀 `rat-cli job <node_ids> <gpu_nos> <cpu_nos> <domain_username> <node_name>`                        | Submits a SLURM job with specified resources and domain.                  |
+| 🚀 `rat-cli job --domain <DOMAIN> [--node-ids <IDS>] [--name <NAME>] [--nodes <NUM>] [--partition <NAME>] [--time <TIME>] [--gpu-nos <NUM>] [--cpu-nos <NUM>] [--jumpserver <SERVER>]` | Submits a SLURM job to start a VSCode instance on specified nodes. |
 | 🔄 `rat-cli sync <LOCAL_PATH> <REMOTE_PATH> [--jumpserver <user@host>] [--direction <upload/download>]` | Synchronizes files/folders between local and remote.                      |
 | 🗑️ `rat-cli uninstall`                                                                               | Removes rat-cli from PATH and deletes all associated files.               |
 | ⬆️ `rat-cli upgrade`                                                                                | Upgrades rat-cli to the latest version from git and updates VSCode server/extensions. |
 | 🔄 `rat-cli install_vscode --version <VERSION> --arch <ARCHITECTURE>`                               | Installs or updates the VSCode server to a specific version and architecture. |
-                     
+| 🧹 `rat-cli clean`                                                                                  | Stops all running processes started by rat-cli (e.g., VSCode server, tunnels, proxies). |
 
+                     
 
 ## Make any linux-machine ssh-accessible
 
