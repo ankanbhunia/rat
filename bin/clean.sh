@@ -38,7 +38,7 @@ else
         if [ -z "$REMAINING_PIDS" ]; then
             echo "All identified rat-cli processes have been stopped."
         else
-            echo "Some processes are still running (PIDs: $REMAINING_PIDS). Manual intervention might be required."
+            echo "Some processes are still running (PIDs: $REMAINING_PIDS). Use kill -9 to manually cancel."
         fi
     else
         echo "Aborting termination. No processes were stopped."
