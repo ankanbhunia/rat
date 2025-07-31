@@ -12,8 +12,8 @@ read -p "Local changes detected. Do you want to stash all changes before pulling
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-    echo "Stashing all local changes..."
-    STASH_OUTPUT=$(git stash --all 2>&1)
+    echo "Stashing local changes (including untracked files)..."
+    STASH_OUTPUT=$(git stash --include-untracked 2>&1)
     echo "$STASH_OUTPUT"
     if echo "$STASH_OUTPUT" | grep -q "No local changes to save"; then
         STASH_NEEDED=false
