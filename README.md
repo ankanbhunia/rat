@@ -19,7 +19,6 @@ source ~/.bashrc
 ```
 
 
-
 | Command                                                                                             | Description                                                               |
 | :-------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------ |
 | 🔑 `rat-cli login`                                                                                   | Logs into your Cloudflare account and copies the necessary certificate.   |
@@ -32,6 +31,7 @@ source ~/.bashrc
 | ⬆️ `rat-cli upgrade`                                                                                | Upgrades rat-cli to the latest version from git and updates VSCode server/extensions. |
 | 🔄 `rat-cli install_vscode --version <VERSION> --arch <ARCHITECTURE>`                               | Installs or updates the VSCode server to a specific version and architecture. |
 | 🧹 `rat-cli clean`                                                                                  | Stops all running processes started by rat-cli (e.g., VSCode server, tunnels, proxies). |
+| 🚀 `rat-cli zj`                                                                                     | Starts a zellij session, downloading it if not found.                     |
 
                      
 
