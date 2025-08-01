@@ -12,7 +12,8 @@ echo "Searching for and stopping processes started by rat-cli..."
 PIDS_TO_KILL_ARRAY=() 
 while IFS= read -r pid; do
     PIDS_TO_KILL_ARRAY+=("$pid")
-done < <(ps aux | grep -E "rat-cli" | grep -v "grep" | grep -v "${BASH_SOURCE[0]}" | grep -v "rat-cli clean" | awk '{print $2}' | grep -E '^[0-9]+$')
+done < <(ps aux | grep -E "rat-cli|rat/bin/.*\.sh" | grep -v "grep" | grep -v "${BASH_SOURCE[0]}" | grep -v "rat-cli clean" | awk '{print $2}' | grep -E '^[0-9]+$')
+echo $PIDS_TO_KILL_ARRAY
 
 # Function to kill a process and its children recursively
 killtree() {
