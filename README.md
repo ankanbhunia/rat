@@ -35,7 +35,45 @@ source ~/.bashrc
 | 🚀 `rat-cli zj`                                                                                     | Starts a zellij session, downloading it if not found.                     |
 | 📦 `rat-cli container [--create <env_name> \| --start <env_name> \| --save <env_name> \| --list \| --delete <env_name>]` | Manages Apptainer container environments (create, start, save, list, delete). |
 
+
+## `rat-cli container` - Apptainer Container Environment Management
+
+The `rat-cli container` command manages Apptainer container environments, enabling creation, starting, saving, listing, and deletion of isolated computational setups. Apptainer (formerly Singularity) is a container platform ideal for HPC and scientific workloads, integrating seamlessly with existing file systems and schedulers.
+
+### Subcommands:
+
+#### `--create <env_name>`
+Creates a new Apptainer container environment.
+*   **`<env_name>`**: Unique name for the environment.
+*   **Prompts**: Base `.sif` image link, environment directory (sandbox), optional code/data directories to mount.
+*   **Process**: Checks Apptainer, creates config, downloads/caches base image, builds writable sandbox.
+*   **Example**: `rat-cli container --create my_deep_learning_env`
+
+#### `--start <env_name>`
+Starts an existing Apptainer container environment, providing a shell session.
+*   **`<env_name>`**: Name of the environment to start.
+*   **Process**: Checks Apptainer, reads config, launches Apptainer shell with configured sandbox and mounts.
+*   **Example**: `rat-cli container --start my_deep_learning_env`
+
+#### `--save <env_name>`
+Saves the current state of a writable sandbox environment into a new Apptainer `.sif` file.
+*   **`<env_name>`**: Name of the environment to save.
+*   **Prompt**: Output path for the `.sif` file.
+*   **Process**: Checks Apptainer, reads config, builds new `.sif` from sandbox.
+*   **Example**: `rat-cli container --save my_deep_learning_env`
+
+#### `--list`
+Lists all configured `rat-cli` container environments.
+*   **Process**: Scans `.containers` directory for config files, displays name, creation date, and sandbox directory.
+*   **Example**: `rat-cli container --list`
+
+#### `--delete <env_name>`
+Deletes an existing Apptainer container environment, including its sandbox folder and configuration file.
+*   **`<env_name>`**: Name of the environment to delete.
+*   **Process**: Checks Apptainer, reads config, prompts for confirmation, removes sandbox and config file.
+*   **Example**: `rat-cli container --delete my_deep_learning_env`
                      
+
 
 ## Make any linux-machine ssh-accessible
 
