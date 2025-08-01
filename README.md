@@ -33,6 +33,7 @@ source ~/.bashrc
 | 🔄 `rat-cli install_vscode --version <VERSION> --arch <ARCHITECTURE>`                               | Installs or updates the VSCode server to a specific version and architecture. |
 | 🧹 `rat-cli clean`                                                                                  | Stops all running processes started by rat-cli (e.g., VSCode server, tunnels, proxies). |
 | 🚀 `rat-cli zj`                                                                                     | Starts a zellij session, downloading it if not found.                     |
+| 📦 `rat-cli container [--create <env_name> \| --start <env_name> \| --save <env_name> \| --list \| --delete <env_name>]` | Manages Apptainer container environments (create, start, save, list, delete). |
 
                      
 
