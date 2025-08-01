@@ -12,7 +12,17 @@ echo "Searching for and stopping processes started by rat-cli..."
 PIDS_TO_KILL_ARRAY=() 
 while IFS= read -r pid; do
     PIDS_TO_KILL_ARRAY+=("$pid")
-done < <(ps aux | grep -E "rat-cli|zellij|${RAT_DIR_ABS_PATH}/bin/(vscode|tunnel|start_proxy|job|sync|install_vscode|upgrade|login_cloudflare|uninstall|zellij)\.sh" | grep -v "grep" | grep -v "${BASH_SOURCE[0]}" | grep -v "rat-cli clean" | awk '{print $2}' | grep -E '^[0-9]+$')
+done < <(ps aux | grep -E "rat-cli" | grep -v "grep" | grep -v "${BASH_SOURCE[0]}" | grep -v "rat-cli clean" | awk '{print $2}' | grep -E '^[0-9]+$')
+
+# Function to kill a process and its children recursively
+killtree() {
+  local _pid=$1
+  echo "Killing PID: $_pid" # Print the PID being killed
+  for _child in $(pgrep -P $_pid); do
+    killtree $_child
+  done
+  kill -9 $_pid 2>/dev/null # Use 2>/dev/null to suppress "No such process" errors
+}
 
 if [ ${#PIDS_TO_KILL_ARRAY[@]} -eq 0 ]; then
     echo "No rat-cli related processes found."
@@ -39,8 +49,10 @@ else
         if [[ "$SELECTION" =~ ^[Nn]$ ]]; then
             echo "Aborting termination. No processes were stopped."
         elif [[ "$SELECTION" =~ ^[Aa]$ ]]; then
-            echo "Attempting to terminate all identified processes..."
-            kill "${PIDS_TO_KILL_ARRAY[@]}"
+            echo "Attempting to terminate all identified processes and their children..."
+            for PID in "${PIDS_TO_KILL_ARRAY[@]}"; do
+                killtree "$PID"
+            done
             echo "Termination attempt complete. Verifying..."
             sleep 2 # Give processes a moment to terminate
 
@@ -65,8 +77,10 @@ else
             if [ ${#PIDS_TO_TERMINATE[@]} -eq 0 ]; then
                 echo "No valid processes selected for termination. Aborting."
             else
-                echo "Attempting to terminate selected processes: ${PIDS_TO_TERMINATE[*]}..."
-                kill "${PIDS_TO_TERMINATE[@]}"
+                echo "Attempting to terminate selected processes and their children: ${PIDS_TO_TERMINATE[*]}..."
+                for PID in "${PIDS_TO_TERMINATE[@]}"; do
+                    killtree "$PID"
+                done
                 echo "Termination attempt complete. Verifying..."
                 sleep 2 # Give processes a moment to terminate
 
