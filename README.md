@@ -99,10 +99,6 @@ The `rat-cli job` command facilitates the submission of SLURM jobs to launch a V
     ```bash
     rat-cli job --node-ids crannog01,crannog02,crannog03 --gpu-nos 1 --cpu-nos 20 --domain crannog0x.runs.space --jumpserver user@example.com
     ```
-*   Submit a job to a single node with 2 GPUs and 30 CPUs, using a jumpserver:
-    ```bash
-    rat-cli job --node-ids crannog05 --gpu-nos 2 --cpu-nos 30 --jumpserver user@example.com
-    ```
 *   Check GPU usage on available nodes:
     ```bash
     rat-cli job --usage
