@@ -74,6 +74,39 @@ Deletes an existing Apptainer container environment, including its sandbox folde
 *   **Example**: `rat-cli container --delete my_deep_learning_env`
                      
 
+## `rat-cli job` - SLURM Job Submission for VSCode
+
+The `rat-cli job` command facilitates the submission of SLURM jobs to launch a VSCode instance on specified compute nodes. It automates the process of generating a temporary SLURM batch script with the desired resources and submitting it to the SLURM workload manager.
+
+### Options:
+
+*   **`--node-ids <IDS>`**: Comma-separated list of specific node IDs (e.g., `crannog01,crannog02`). This option is optional.
+*   **`--name <NAME>`**: Specifies the SLURM job name. Defaults to `exp`.
+*   **`--nodes <NUM>`**: Defines the number of nodes required for the job. This option is optional.
+*   **`--partition <NAME>`**: Sets the SLURM partition name. Defaults to `PGR-Standard`.
+*   **`--time <TIME>`**: Specifies the SLURM walltime (e.g., `7-00:00:00` for 7 days). Defaults to `7-00:00:00`.
+*   **`--gpu-nos <NUM>`**: Specifies the number of GPUs required for the job. This option is optional.
+*   **`--cpu-nos <NUM>`**: Specifies the number of CPUs required per task. Defaults to `20`.
+*   **`--domain <DOMAIN>`**: **Required**. The full domain for the VSCode tunnel (e.g., `crannog0x.runs.space`).
+*   **`--jumpserver <SERVER>`**: The jumpserver address for the VSCode tunnel (e.g., `user@example.com`). This option is optional.
+*   **`-h, --help`**: Displays the help message and exits.
+*   **`--usage`**: Shows a summary of GPU usage on available nodes and exits.
+
+
+### Examples:
+
+*   Submit a job to specific nodes with 1 GPU and 20 CPUs, using a domain and jumpserver:
+    ```bash
+    rat-cli job --node-ids crannog01,crannog02,crannog03 --gpu-nos 1 --cpu-nos 20 --domain crannog0x.runs.space --jumpserver user@example.com
+    ```
+*   Submit a job to a single node with 2 GPUs and 30 CPUs, using a jumpserver:
+    ```bash
+    rat-cli job --node-ids crannog05 --gpu-nos 2 --cpu-nos 30 --jumpserver user@example.com
+    ```
+*   Check GPU usage on available nodes:
+    ```bash
+    rat-cli job --usage
+    ```
 
 ## Make any linux-machine ssh-accessible
 
