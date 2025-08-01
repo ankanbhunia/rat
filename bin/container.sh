@@ -74,7 +74,7 @@ container_create() {
     read -p "Enter code directory to mount (optional): " code_directory
     read -p "Enter data directory to mount (optional): " data_directory
 
-    local apptainer_prefix_value="apptainer shell --nv --writable --fakeroot --bind /usr/lib/x86_64-linux-gnu/"
+    local apptainer_prefix_value="apptainer shell --nv --writable --fakeroot"
 
     echo "base_image: $base_image" > "$config_file"
     echo "sandbox_folder: $sandbox_folder" >> "$config_file"
