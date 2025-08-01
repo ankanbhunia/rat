@@ -58,8 +58,53 @@ container_create() {
         exit 1
     fi
 
-    read -p "Enter base image .sif link (default: https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif): " base_image_input
-    local base_image="${base_image_input:-https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif}"
+    # Ask user for image type
+    echo "Choose base image type:"
+    echo "1) Apptainer/Singularity SIF link (e.g., https://.../image.sif)"
+    echo "2) Docker image (e.g., ubuntu:latest, nvidia/cuda:12.1.0-devel-ubuntu22.04)"
+    read -p "Enter choice (1 or 2, default: 1): " image_type_choice
+    image_type_choice="${image_type_choice:-1}"
+
+    local base_image=""
+    local image_source="" # Will be the actual source for apptainer build
+
+    if [[ "$image_type_choice" == "1" ]]; then
+        read -p "Enter base image .sif link (default: https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif): " base_image_input
+        base_image="${base_image_input:-https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif}"
+        
+        local sif_filename=$(basename "$base_image")
+        local cached_sif_path="$SIF_CACHE_DIR/$sif_filename"
+
+        if [ ! -f "$cached_sif_path" ]; then
+            echo "Downloading $sif_filename..."
+            if command -v pv &> /dev/null; then
+                wget -O - "$base_image" | pv -s "$(wget --spider "$base_image" 2>&1 | grep 'Length:' | awk '{print $2}')" > "$cached_sif_path"
+            else
+                wget -O "$cached_sif_path" "$base_image"
+            fi
+            
+            if [ $? -ne 0 ]; then
+                echo "Error: Failed to download .sif file."
+                rm "$config_file"
+                exit 1
+            fi
+            echo "Download complete. SIF file saved to $cached_sif_path"
+        else
+            echo "Using cached SIF file: $cached_sif_path"
+        fi
+        image_source="$cached_sif_path" # Use cached SIF path as source
+    elif [[ "$image_type_choice" == "2" ]]; then
+        read -p "Enter Docker image name (e.g., ubuntu:latest): " docker_image_name
+        if [ -z "$docker_image_name" ]; then
+            echo "Error: Docker image name cannot be empty."
+            exit 1
+        fi
+        base_image="docker://$docker_image_name" # Store the docker URI in config
+        image_source="$base_image" # Use the docker URI as source for build
+    else
+        echo "Invalid choice. Exiting."
+        exit 1
+    fi
 
     local default_sandbox_folder="$CONTAINERS_DIR/$env_name-sandbox"
     read -p "Enter environment directory (SANDBOX_FOLDER) (default: $default_sandbox_folder): " sandbox_folder_input
@@ -92,29 +137,8 @@ container_create() {
 
     echo "Config file created: $config_file"
 
-    local sif_filename=$(basename "$base_image")
-    local cached_sif_path="$SIF_CACHE_DIR/$sif_filename"
-
-    if [ ! -f "$cached_sif_path" ]; then
-        echo "Downloading $sif_filename..."
-        if command -v pv &> /dev/null; then
-            wget -O - "$base_image" | pv -s "$(wget --spider "$base_image" 2>&1 | grep 'Length:' | awk '{print $2}')" > "$cached_sif_path"
-        else
-            wget -O "$cached_sif_path" "$base_image"
-        fi
-        
-        if [ $? -ne 0 ]; then
-            echo "Error: Failed to download .sif file."
-            rm "$config_file"
-            exit 1
-        fi
-        echo "Download complete. SIF file saved to $cached_sif_path"
-    else
-        echo "Using cached SIF file: $cached_sif_path"
-    fi
-
-    echo "Building sandbox environment in $sandbox_folder..."
-    apptainer build --sandbox "$sandbox_folder" "$cached_sif_path"
+    echo "Building sandbox environment in $sandbox_folder from $image_source..."
+    apptainer build --sandbox "$sandbox_folder" "$image_source"
     if [ $? -ne 0 ]; then
         echo "Error: Apptainer build failed."
         rm "$config_file"
@@ -142,6 +166,14 @@ container_start() {
         echo "Error: Sandbox folder '$SANDBOX_FOLDER' does not exist."
         echo "Please create it using 'rat-cli container --create $env_name'."
         exit 1
+    fi
+
+    if [ ! -d "$SANDBOX_FOLDER"/code ]; then
+        mkdir -p "$SANDBOX_FOLDER"/code
+    fi
+
+    if [ ! -d "$SANDBOX_FOLDER"/data ]; then
+        mkdir -p "$SANDBOX_FOLDER"/data
     fi
 
     local full_start_command="$APPTAINER_PREFIX"
