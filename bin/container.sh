@@ -61,18 +61,26 @@ container_create() {
     read -p "Enter base image .sif link (default: https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif): " base_image_input
     local base_image="${base_image_input:-https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif}"
 
-    read -p "Enter environment directory (SANDBOX_FOLDER): " sandbox_folder
-    if [ -z "$sandbox_folder" ]; then
-        echo "Error: SANDBOX_FOLDER cannot be empty."
-        exit 1
-    fi
+    local default_sandbox_folder="$CONTAINERS_DIR/$env_name-sandbox"
+    read -p "Enter environment directory (SANDBOX_FOLDER) (default: $default_sandbox_folder): " sandbox_folder_input
+    local sandbox_folder="${sandbox_folder_input:-$default_sandbox_folder}"
+
     if [ -d "$sandbox_folder" ]; then
         echo "Error: Sandbox directory '$sandbox_folder' already exists. Please choose a different directory or delete the existing one."
         exit 1
     fi
 
     read -p "Enter code directory to mount (optional): " code_directory
+    if [ -n "$code_directory" ] && [ ! -d "$code_directory" ]; then
+        echo "Error: Code directory '$code_directory' does not exist. Please provide a valid path."
+        exit 1
+    fi
+
     read -p "Enter data directory to mount (optional): " data_directory
+    if [ -n "$data_directory" ] && [ ! -d "$data_directory" ]; then
+        echo "Error: Data directory '$data_directory' does not exist. Please provide a valid path."
+        exit 1
+    fi
 
     local apptainer_prefix_value="apptainer shell --nv --writable --fakeroot"
 
@@ -89,7 +97,12 @@ container_create() {
 
     if [ ! -f "$cached_sif_path" ]; then
         echo "Downloading $sif_filename..."
-        wget -O "$cached_sif_path" "$base_image"
+        if command -v pv &> /dev/null; then
+            wget -O - "$base_image" | pv -s "$(wget --spider "$base_image" 2>&1 | grep 'Length:' | awk '{print $2}')" > "$cached_sif_path"
+        else
+            wget -O "$cached_sif_path" "$base_image"
+        fi
+        
         if [ $? -ne 0 ]; then
             echo "Error: Failed to download .sif file."
             rm "$config_file"
@@ -105,6 +118,10 @@ container_create() {
     if [ $? -ne 0 ]; then
         echo "Error: Apptainer build failed."
         rm "$config_file"
+        if [ -d "$sandbox_folder" ]; then
+            echo "Cleaning up partially created sandbox directory: $sandbox_folder..."
+            rm -rf "$sandbox_folder"
+        fi
         exit 1
     fi
     echo "Environment '$env_name' setup complete. You can now run 'rat-cli container --start $env_name' to enter the container."
@@ -184,18 +201,23 @@ container_list() {
             
             # Read sandbox_folder from config
             local sandbox_folder=""
+            local base_image=""
+            local apptainer_prefix=""
             while IFS=':' read -r key value; do
                 key=$(echo "$key" | xargs)
                 value=$(echo "$value" | xargs)
-                if [ "$key" == "sandbox_folder" ]; then
-                    sandbox_folder="$value"
-                    break
-                fi
+                case "$key" in
+                    "sandbox_folder") sandbox_folder="$value" ;;
+                    "base_image") base_image="$value" ;;
+                    "apptainer_prefix") apptainer_prefix="$value" ;;
+                esac
             done < "$config_file"
             
             echo "  - Name: $env_name"
             echo "    Created: $creation_date"
             echo "    Sandbox Directory: $sandbox_folder"
+            echo "    Base Image: $base_image"
+            echo "    Apptainer Prefix: $apptainer_prefix"
             echo "----------------------------------------"
         fi
     done
