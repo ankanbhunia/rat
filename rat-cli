@@ -34,18 +34,19 @@ execute_command() {
         MESSAGE_COLOR="\033[44m\033[37m"
         RED_BG_COLOR="\033[41m\033[37m" # Red background, white text
         GREEN_BG_COLOR="\033[42m\033[37m" # Green background, white text
-        RESET_COLOR="\033[0m"
+        RESET_COLOR="\033[0m" # Re-add RESET_COLOR
         LINE_LENGTH=75 # Adjust as needed for desired box width
 
-        echo -e "${MESSAGE_COLOR}┌$(printf '─%.0s' $(seq 1 $LINE_LENGTH))┐${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH )) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${MESSAGE_COLOR} running in background.") │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH )) "Running Process - PID: $PID") │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH)) "Output redirected to: $LOG_FILE") │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '─%.0s' $(seq 1 $LINE_LENGTH)) │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ ${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${MESSAGE_COLOR}│${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '─%.0s' $(seq 1 $LINE_LENGTH)) │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.") │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}└$(printf '─%.0s' $(seq 1 $LINE_LENGTH))┘${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${MESSAGE_COLOR} running in background.")"
+        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Running Process - PID: $PID")"
+        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Output redirected to: $LOG_FILE")"
+        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${MESSAGE_COLOR}${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${MESSAGE_COLOR}"
+        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.")"
+        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${RESET_COLOR}" # Reset color at the end
     else
 
         LOG_DIR="$SCRIPT_ABS_DIR/.logs"
@@ -54,23 +55,23 @@ execute_command() {
         TIMESTAMP_HUMAN=$(date +"%Y-%m-%d_%H-%M-%S")
         LOG_FILE="$LOG_DIR/log_${SUBCOMMAND}_${TIMESTAMP_HUMAN}.log"
         # ANSI escape codes for blue background (\033[44m) and white text (\033[37m)
-        # \033[0m to reset colors
         MESSAGE_COLOR="\033[44m\033[37m"
-        RESET_COLOR="\033[0m"
+        RESET_COLOR="\033[0m" # Re-add RESET_COLOR
         LINE_LENGTH=75 # Adjust as needed for desired box width
         MESSAGE_COLOR="\033[44m\033[37m"
         RED_BG_COLOR="\033[41m\033[37m" # Red background, white text
         GREEN_BG_COLOR="\033[42m\033[37m" # Green background, white text
 
-        echo -e "${MESSAGE_COLOR}┌$(printf '─%.0s' $(seq 1 $LINE_LENGTH))┐${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH)) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${MESSAGE_COLOR} started running.") │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH )) "Output redirected to: $LOG_FILE") │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '─%.0s' $(seq 1 $LINE_LENGTH)) │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ ${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${MESSAGE_COLOR}│${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '─%.0s' $(seq 1 $LINE_LENGTH)) │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.") │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH )) "Press Ctrl+C to exit.") │${RESET_COLOR}"
-        echo -e "${MESSAGE_COLOR}└$(printf '─%.0s' $(seq 1 $LINE_LENGTH))┘${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${MESSAGE_COLOR} started running.")"
+        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Output redirected to: $LOG_FILE")"
+        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${MESSAGE_COLOR}${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${MESSAGE_COLOR}"
+        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.")"
+        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Press Ctrl+C to exit.")"
+        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${RESET_COLOR}" # Reset color at the end
 
         bash "$@" > "$LOG_FILE" 2>&1
     fi
