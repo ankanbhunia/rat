@@ -35,7 +35,7 @@ execute_command() {
         RED_BG_COLOR="\033[41m\033[37m" # Red background, white text
         GREEN_BG_COLOR="\033[42m\033[37m" # Green background, white text
         RESET_COLOR="\033[0m" # Re-add RESET_COLOR
-        LINE_LENGTH=75 # Adjust as needed for desired box width
+        LINE_LENGTH=$(tput cols) # Adjust as needed for desired box width
 
         echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${MESSAGE_COLOR} running in background.")"
@@ -57,7 +57,7 @@ execute_command() {
         # ANSI escape codes for blue background (\033[44m) and white text (\033[37m)
         MESSAGE_COLOR="\033[44m\033[37m"
         RESET_COLOR="\033[0m" # Re-add RESET_COLOR
-        LINE_LENGTH=75 # Adjust as needed for desired box width
+        LINE_LENGTH=$(tput cols) # Adjust as needed for desired box width
         MESSAGE_COLOR="\033[44m\033[37m"
         RED_BG_COLOR="\033[41m\033[37m" # Red background, white text
         GREEN_BG_COLOR="\033[42m\033[37m" # Green background, white text
