@@ -40,15 +40,15 @@ execute_command() {
         nohup "$@" > "$LOG_FILE" 2>&1 &
         PID=$! # Capture the PID of the last background command
         
-        echo -e "${YELLOW_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "${YELLOW_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${YELLOW_BG_COLOR} running in background.")"
-        echo -e "${YELLOW_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Running Process - PID: $PID")"
-        echo -e "${YELLOW_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Output redirected to: $LOG_FILE")"
-        echo -e "${YELLOW_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "${YELLOW_BG_COLOR}${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${YELLOW_BG_COLOR}"
-        echo -e "${YELLOW_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "${YELLOW_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.")"
-        echo -e "${YELLOW_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${BLUE_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${BLUE_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${YELLOW_BG_COLOR} running in background.")"
+        echo -e "${BLUE_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Running Process - PID: $PID")"
+        echo -e "${BLUE_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Output redirected to: $LOG_FILE")"
+        echo -e "${BLUE_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${BLUE_BG_COLOR}${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${YELLOW_BG_COLOR}"
+        echo -e "${BLUE_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${BLUE_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.")"
+        echo -e "${BLUE_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "${RESET_COLOR}" # Reset color at the end
     else
 
