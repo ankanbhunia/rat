@@ -17,6 +17,7 @@ usage() {
     echo "Options:"
     echo "  --jumpserver <USER@HOST>  Specify the jumpserver (user@host) to connect to."
     echo "                            This server will host the proxy. (Default: $JUMPSERVER_DEFAULT)"
+    echo "  --clean                   Remove http_proxy and https_proxy environment variables from ~/.bashrc and exit."
     echo "  -h, --help                Display this help message and exit."
     echo ""
     echo "Requirements:"
@@ -38,11 +39,15 @@ usage() {
 }
 
 # --- Argument Parsing ---
+CLEAN_FLAG=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --jumpserver)
             shift
             JUMPSERVER="$1"
+            ;;
+        --clean)
+            CLEAN_FLAG=true
             ;;
         -h|--help)
             help_flag=true
@@ -54,6 +59,15 @@ while [[ $# -gt 0 ]]; do
     esac
     shift
 done
+
+if "$CLEAN_FLAG"; then
+    echo "Removing proxy environment variables from ~/.bashrc..."
+    sed -i '/^export http_proxy=/d' ~/.bashrc
+    sed -i '/^export https_proxy=/d' ~/.bashrc
+    source ~/.bashrc # Reload bashrc to apply changes
+    echo "Proxy environment variables removed and ~/.bashrc reloaded."
+    exit 0
+fi
 
 if "$help_flag"; then
     usage
