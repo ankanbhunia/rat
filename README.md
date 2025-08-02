@@ -174,7 +174,7 @@ chmod +x ~/.local/bin/zellij
 rm zellij-x86_64-unknown-linux-musl.tar.gz
 ```
 
-## Build docker from scratch
+## Build ```container.sif``` from scratch (docker on a sudo machine required)
 
 ```
 # put Dockerfile in the same path
