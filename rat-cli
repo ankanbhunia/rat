@@ -19,6 +19,16 @@ set -- "${ARGS[@]}" # Set remaining arguments
 # Get the absolute path of the current script's directory
 SCRIPT_ABS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+# ANSI escape codes for colors and reset
+BLUE_BG_COLOR="\033[44m\033[37m" # Blue background, white text
+YELLOW_BG_COLOR="\033[43m\033[30m" # Yellow background, black text
+RED_BG_COLOR="\033[41m\033[37m" # Red background, white text
+GREEN_BG_COLOR="\033[42m\033[37m" # Green background, white text
+CYAN_BG_COLOR="\033[46m\033[30m" # Cyan background, black text
+MAGENTA_BG_COLOR="\033[45m\033[37m" # Magenta background, white text
+RESET_COLOR="\033[0m" # Reset colors
+LINE_LENGTH=$(tput cols) # Adjust as needed for desired box width
+
 # Function to execute commands, optionally in background
 execute_command() {
     if [ "$BACKGROUND" = true ]; then
@@ -29,23 +39,16 @@ execute_command() {
         LOG_FILE="$LOG_DIR/log_${SUBCOMMAND}_${TIMESTAMP_HUMAN}.log"
         nohup "$@" > "$LOG_FILE" 2>&1 &
         PID=$! # Capture the PID of the last background command
-        # ANSI escape codes for blue background (\033[44m) and white text (\033[37m)
-        # \033[0m to reset colors
-        MESSAGE_COLOR="\033[44m\033[37m"
-        RED_BG_COLOR="\033[41m\033[37m" # Red background, white text
-        GREEN_BG_COLOR="\033[42m\033[37m" # Green background, white text
-        RESET_COLOR="\033[0m" # Re-add RESET_COLOR
-        LINE_LENGTH=$(tput cols) # Adjust as needed for desired box width
-
-        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${MESSAGE_COLOR} running in background.")"
-        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Running Process - PID: $PID")"
-        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Output redirected to: $LOG_FILE")"
-        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "${MESSAGE_COLOR}${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${MESSAGE_COLOR}"
-        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.")"
-        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        
+        echo -e "${YELLOW_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${YELLOW_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${YELLOW_BG_COLOR} running in background.")"
+        echo -e "${YELLOW_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Running Process - PID: $PID")"
+        echo -e "${YELLOW_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Output redirected to: $LOG_FILE")"
+        echo -e "${YELLOW_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${YELLOW_BG_COLOR}${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${YELLOW_BG_COLOR}"
+        echo -e "${YELLOW_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${YELLOW_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.")"
+        echo -e "${YELLOW_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "${RESET_COLOR}" # Reset color at the end
     else
 
@@ -54,23 +57,16 @@ execute_command() {
         TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
         TIMESTAMP_HUMAN=$(date +"%Y-%m-%d_%H-%M-%S")
         LOG_FILE="$LOG_DIR/log_${SUBCOMMAND}_${TIMESTAMP_HUMAN}.log"
-        # ANSI escape codes for blue background (\033[44m) and white text (\033[37m)
-        MESSAGE_COLOR="\033[44m\033[37m"
-        RESET_COLOR="\033[0m" # Re-add RESET_COLOR
-        LINE_LENGTH=$(tput cols) # Adjust as needed for desired box width
-        MESSAGE_COLOR="\033[44m\033[37m"
-        RED_BG_COLOR="\033[41m\033[37m" # Red background, white text
-        GREEN_BG_COLOR="\033[42m\033[37m" # Green background, white text
-
-        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${MESSAGE_COLOR} started running.")"
-        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Output redirected to: $LOG_FILE")"
-        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "${MESSAGE_COLOR}${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${MESSAGE_COLOR}"
-        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.")"
-        echo -e "${MESSAGE_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Press Ctrl+C to exit.")"
-        echo -e "${MESSAGE_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        
+        echo -e "${BLUE_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${BLUE_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${BLUE_BG_COLOR} started running.")"
+        echo -e "${BLUE_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Output redirected to: $LOG_FILE")"
+        echo -e "${BLUE_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${BLUE_BG_COLOR}${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${BLUE_BG_COLOR}"
+        echo -e "${BLUE_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${BLUE_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.")"
+        echo -e "${BLUE_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH )) "Press Ctrl+C to exit.")"
+        echo -e "${BLUE_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "${RESET_COLOR}" # Reset color at the end
 
         bash "$@" > "$LOG_FILE" 2>&1
@@ -115,21 +111,25 @@ case "$SUBCOMMAND" in
         bash "$SCRIPT_ABS_DIR/bin/container.sh" "$@"
         ;;
     *)
-        echo "Usage: rat-cli [vscode|tunnel|proxy|login|job|sync|uninstall|upgrade|install_vscode|clean|zj|container] [-b|--background] [-- args <>]"
-        echo "  -b, --background: Run the command in the background without visible terminal output."
-        echo "Compact Usage Summary:"
-        echo "  rat-cli login: Logs into your Cloudflare account and copies the necessary certificate."
-        echo "  rat-cli vscode [--port <PORT>] [--jumpserver <user@host>] [--domain <domain>]: Starts a VSCode instance, optionally with a specific port, jumpserver, or domain."
-        echo "  rat-cli tunnel --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol <http/ssh>]: Tunnels a local port to a public Cloudflare URL."
-        echo "  rat-cli proxy --jumpserver <user@host>: Shares internet via a remote proxy server using a jumpserver."
-        echo "  rat-cli job <node_ids> <gpu_nos> <cpu_nos> <domain_username> <node_name>: Submits a SLURM job with specified resources and domain."
-        echo "  rat-cli sync <LOCAL_PATH> <REMOTE_PATH> [--jumpserver <user@host>] [--direction <upload/download>]: Synchronizes files/folders between local and remote."
-        echo "  rat-cli uninstall: Removes rat-cli from PATH and deletes all associated files."
-        echo "  rat-cli upgrade: Upgrades rat-cli to the latest version from git."
-        echo "  rat-cli install_vscode --version <VERSION> --arch <ARCHITECTURE>: Installs or updates the VSCode server to a specific version and architecture."
-        echo "  rat-cli clean: Stops all running processes started by rat-cli (e.g., VSCode server, tunnels, proxies)."
-        echo "  rat-cli zj: Starts a zellij session, downloading it if not found."
-        echo "  rat-cli container [--create <env_name> | --start <env_name> | --save <env_name> | --list | --delete <env_name>]: Manages Apptainer container environments."
+        echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Usage: rat-cli [vscode|tunnel|proxy|login|job|sync|uninstall|upgrade|install_vscode|clean|zj|container] [-b|--background] [-- args <>]")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  -b, --background: Run the command in the background.")"
+        echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Compact Usage Summary:")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${RED_BG_COLOR}login${RESET_COLOR}: Logs into your Cloudflare account and copies the necessary certificate.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${GREEN_BG_COLOR}vscode${RESET_COLOR} [--port <PORT>] [--jumpserver <user@host>] [--domain <domain>]: Starts a VSCode instance, optionally with a specific port, jumpserver, or domain.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${YELLOW_BG_COLOR}tunnel${RESET_COLOR} --port <PORT> [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol <http/ssh>]: Tunnels a local port to a public Cloudflare URL.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${CYAN_BG_COLOR}proxy${RESET_COLOR} --jumpserver <user@host>: Shares internet via a remote proxy server using a jumpserver.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${MAGENTA_BG_COLOR}job${RESET_COLOR} <node_ids> <gpu_nos> <cpu_nos> <domain_username> <node_name>: Submits a SLURM job with specified resources and domain.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${RED_BG_COLOR}sync${RESET_COLOR} <LOCAL_PATH> <REMOTE_PATH> [--jumpserver <user@host>] [--direction <upload/download>]: Synchronizes files/folders between local and remote.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${GREEN_BG_COLOR}uninstall${RESET_COLOR}: Removes rat-cli from PATH and deletes all associated files.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${YELLOW_BG_COLOR}upgrade${RESET_COLOR}: Upgrades rat-cli to the latest version from git.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${CYAN_BG_COLOR}install_vscode${RESET_COLOR} --version <VERSION> --arch <ARCHITECTURE>: Installs or updates the VSCode server to a specific version and architecture.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${MAGENTA_BG_COLOR}clean${RESET_COLOR}: Stops all running processes started by rat-cli (e.g., VSCode server, tunnels, proxies).")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${RED_BG_COLOR}zj${RESET_COLOR}: Starts a zellij session, downloading it if not found.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${GREEN_BG_COLOR}container${RESET_COLOR} [--create <env_name> | --start <env_name> | --save <env_name> | --list | --delete <env_name>]: Manages Apptainer container environments.")"
+        echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "${RESET_COLOR}"
         exit 1
         ;;
 esac
