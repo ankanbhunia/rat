@@ -184,7 +184,7 @@ container_create() {
 
     local apptainer_prefix_value="apptainer shell --nv --writable --fakeroot"
 
-    echo "base_image: $base_image" > "$config_file"
+    echo "base_image: $base_image_input_for_new_config" > "$config_file"
     echo "sandbox_folder: $sandbox_folder" >> "$config_file"
     [ -n "$code_directory" ] && echo "code_directory: $code_directory" >> "$config_file"
     [ -n "$data_directory" ] && echo "data_directory: $data_directory" >> "$config_file"
