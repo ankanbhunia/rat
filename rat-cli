@@ -4,18 +4,87 @@
 SUBCOMMAND=$1
 shift # Remove the subcommand from the arguments list
 
+# Check for background argument
+BACKGROUND=false
+ARGS=()
+for arg in "$@"; do
+    if [[ "$arg" == "-b" || "$arg" == "--background" ]]; then
+        BACKGROUND=true
+    else
+        ARGS+=("$arg")
+    fi
+done
+set -- "${ARGS[@]}" # Set remaining arguments
+
 # Get the absolute path of the current script's directory
 SCRIPT_ABS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+# Function to execute commands, optionally in background
+execute_command() {
+    if [ "$BACKGROUND" = true ]; then
+        LOG_DIR="$SCRIPT_ABS_DIR/.logs"
+        mkdir -p "$LOG_DIR"
+        TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+        TIMESTAMP_HUMAN=$(date +"%Y-%m-%d_%H-%M-%S")
+        LOG_FILE="$LOG_DIR/log_${SUBCOMMAND}_${TIMESTAMP_HUMAN}.log"
+        nohup "$@" > "$LOG_FILE" 2>&1 &
+        PID=$! # Capture the PID of the last background command
+        # ANSI escape codes for blue background (\033[44m) and white text (\033[37m)
+        # \033[0m to reset colors
+        MESSAGE_COLOR="\033[44m\033[37m"
+        RED_BG_COLOR="\033[41m\033[37m" # Red background, white text
+        GREEN_BG_COLOR="\033[42m\033[37m" # Green background, white text
+        RESET_COLOR="\033[0m"
+        LINE_LENGTH=75 # Adjust as needed for desired box width
+
+        echo -e "${MESSAGE_COLOR}┌$(printf '─%.0s' $(seq 1 $LINE_LENGTH))┐${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH )) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${MESSAGE_COLOR} running in background.") │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH )) "Running Process - PID: $PID") │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH)) "Output redirected to: $LOG_FILE") │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '─%.0s' $(seq 1 $LINE_LENGTH)) │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ ${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${MESSAGE_COLOR}│${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '─%.0s' $(seq 1 $LINE_LENGTH)) │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.") │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}└$(printf '─%.0s' $(seq 1 $LINE_LENGTH))┘${RESET_COLOR}"
+    else
+
+        LOG_DIR="$SCRIPT_ABS_DIR/.logs"
+        mkdir -p "$LOG_DIR"
+        TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+        TIMESTAMP_HUMAN=$(date +"%Y-%m-%d_%H-%M-%S")
+        LOG_FILE="$LOG_DIR/log_${SUBCOMMAND}_${TIMESTAMP_HUMAN}.log"
+        # ANSI escape codes for blue background (\033[44m) and white text (\033[37m)
+        # \033[0m to reset colors
+        MESSAGE_COLOR="\033[44m\033[37m"
+        RESET_COLOR="\033[0m"
+        LINE_LENGTH=75 # Adjust as needed for desired box width
+        MESSAGE_COLOR="\033[44m\033[37m"
+        RED_BG_COLOR="\033[41m\033[37m" # Red background, white text
+        GREEN_BG_COLOR="\033[42m\033[37m" # Green background, white text
+
+        echo -e "${MESSAGE_COLOR}┌$(printf '─%.0s' $(seq 1 $LINE_LENGTH))┐${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH)) "rat-cli command ${RED_BG_COLOR}${SUBCOMMAND}${MESSAGE_COLOR} started running.") │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH )) "Output redirected to: $LOG_FILE") │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '─%.0s' $(seq 1 $LINE_LENGTH)) │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ ${GREEN_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "Command: ${*}") ${MESSAGE_COLOR}│${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '─%.0s' $(seq 1 $LINE_LENGTH)) │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH)) "Use 'rat-cli clean' to manage or stop processes.") │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}│ $(printf '%-*s' $((LINE_LENGTH )) "Press Ctrl+C to exit.") │${RESET_COLOR}"
+        echo -e "${MESSAGE_COLOR}└$(printf '─%.0s' $(seq 1 $LINE_LENGTH))┘${RESET_COLOR}"
+
+        bash "$@" > "$LOG_FILE" 2>&1
+    fi
+}
+
 case "$SUBCOMMAND" in
     vscode)
-        bash "$SCRIPT_ABS_DIR/bin/vscode.sh" "$@"
+        execute_command "$SCRIPT_ABS_DIR/bin/vscode.sh" "$@"
         ;;
     tunnel)
-        bash "$SCRIPT_ABS_DIR/bin/tunnel.sh" "$@"
+        execute_command "$SCRIPT_ABS_DIR/bin/tunnel.sh" "$@"
         ;;
     proxy)
-        bash "$SCRIPT_ABS_DIR/bin/start_proxy.sh" "$@"
+        execute_command "$SCRIPT_ABS_DIR/bin/start_proxy.sh" "$@"
         ;;
     login)
         bash "$SCRIPT_ABS_DIR/bin/login_cloudflare.sh" "$@"
@@ -45,7 +114,8 @@ case "$SUBCOMMAND" in
         bash "$SCRIPT_ABS_DIR/bin/container.sh" "$@"
         ;;
     *)
-        echo "Usage: rat-cli [vscode|tunnel|proxy|login|job|sync|uninstall|upgrade|install_vscode|clean|zj|container] [-- args <>]"
+        echo "Usage: rat-cli [vscode|tunnel|proxy|login|job|sync|uninstall|upgrade|install_vscode|clean|zj|container] [-b|--background] [-- args <>]"
+        echo "  -b, --background: Run the command in the background without visible terminal output."
         echo "Compact Usage Summary:"
         echo "  rat-cli login: Logs into your Cloudflare account and copies the necessary certificate."
         echo "  rat-cli vscode [--port <PORT>] [--jumpserver <user@host>] [--domain <domain>]: Starts a VSCode instance, optionally with a specific port, jumpserver, or domain."
