@@ -11,9 +11,13 @@ echo "Searching for and stopping processes started by rat-cli..."
 # This is more robust as it checks the full command line and handles PIDs safely using an array sw
 PIDS_TO_KILL_ARRAY=() 
 while IFS= read -r pid; do
-    PIDS_TO_KILL_ARRAY+=("$pid")
+    # Exclude current script's PID and its parent's PID
+    if [[ "$pid" -ne "$$" && "$pid" -ne "$PPID" ]]; then
+        PIDS_TO_KILL_ARRAY+=("$pid")
+    fi
 done < <(ps aux | grep -E "rat-cli|rat/bin/.*\.sh" | grep -v "grep" | grep -v "${BASH_SOURCE[0]}" | grep -v "rat-cli clean" | awk '{print $2}' | grep -E '^[0-9]+$')
-echo $PIDS_TO_KILL_ARRAY
+
+echo "Identified PIDS to potentially kill: ${PIDS_TO_KILL_ARRAY[@]}"
 
 # Function to kill a process and its children recursively
 killtree() {
@@ -36,7 +40,11 @@ else
         CMD=$(ps -p "$PID" -o command= --no-headers 2>/dev/null)
         if [ -n "$CMD" ]; then
             PROCESS_MAP["$INDEX"]="$PID"
-            echo "  $INDEX) PID: $PID - CMD: $CMD"
+            if [[ "$CMD" == *"rat-cli"* ]]; then
+                echo -e "  $INDEX) \033[41mPID: $PID - CMD: $CMD\033[0m" # Red background if 'rat-cli' is in CMD
+            else
+                echo -e "  $INDEX) \033[43mPID: $PID - CMD: $CMD\033[0m" # Yellow background otherwise
+            fi
             INDEX=$((INDEX+1))
         fi
     done
@@ -44,27 +52,11 @@ else
     if [ ${#PROCESS_MAP[@]} -eq 0 ]; then
         echo "No active rat-cli related processes found after detailed check."
     else
-        read -p "Enter numbers of processes to terminate (e.g., '1 3 5'), 'a' for all, or 'n' to abort: " -r SELECTION
+        read -p "Enter numbers of processes to terminate (e.g., '1 3 5'), or 'n' to abort: " -r SELECTION
         echo
 
         if [[ "$SELECTION" =~ ^[Nn]$ ]]; then
             echo "Aborting termination. No processes were stopped."
-        elif [[ "$SELECTION" =~ ^[Aa]$ ]]; then
-            echo "Attempting to terminate all identified processes and their children..."
-            for PID in "${PIDS_TO_KILL_ARRAY[@]}"; do
-                killtree "$PID"
-            done
-            echo "Termination attempt complete. Verifying..."
-            sleep 2 # Give processes a moment to terminate
-
-            # Verify if processes are still running
-            PIDS_COMMA_SEPARATED=$(IFS=,; echo "${PIDS_TO_KILL_ARRAY[*]}")
-            REMAINING_PIDS=$(ps -p "$PIDS_COMMA_SEPARATED" -o pid= --no-headers 2>/dev/null)
-            if [ -z "$REMAINING_PIDS" ]; then
-                echo "All identified rat-cli processes have been stopped."
-            else
-                echo "Some processes are still running (PIDs: $REMAINING_PIDS). Use kill -9 to manually cancel."
-            fi
         else
             PIDS_TO_TERMINATE=()
             for NUM in $SELECTION; do
