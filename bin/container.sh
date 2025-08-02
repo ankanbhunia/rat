@@ -44,7 +44,6 @@ perform_build() {
             
             if [ $? -ne 0 ]; then
                 echo "Error: Failed to download .sif file."
-                rm "$config_file"
                 exit 1
             fi
             echo "Download complete. SIF file saved to $cached_sif_path"
