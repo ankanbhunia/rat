@@ -174,120 +174,16 @@ chmod +x ~/.local/bin/zellij
 rm zellij-x86_64-unknown-linux-musl.tar.gz
 ```
 
-## Sample DockerFile for cuda+conda setup
-
-```DockerFile
-FROM nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04
-
-# set bash as current shell
-RUN chsh -s /bin/bash
-SHELL ["/bin/bash", "-c"]
-
-# install necessary general Linux packages
-RUN apt-get update && \
-    apt-get install -y \
-    wget \
-    bzip2 \
-    ca-certificates \
-    libglib2.0-0 \
-    libxext6 \
-    libsm6 \
-    libxrender1 \
-    git \
-    mercurial \
-    subversion \
-    nano \
-    mesa-utils \
-    freeglut3-dev \
-    build-essential \
-    curl \
-    unzip \
-    zip \
-    tar \
-    p7zip-full \
-    xz-utils \
-    vim \
-    openssh-client \
-    net-tools \
-    iputils-ping \
-    procps \
-    rsync \
-    htop \
-    locales \
-    tmux \
-    screen && \
-    apt-get clean
-
-# install anaconda
-RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh -O ~/anaconda.sh && \
-    /bin/bash ~/anaconda.sh -b -p /opt/conda && \
-    rm ~/anaconda.sh && \
-    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    find /opt/conda/ -follow -type f -name '*.a' -delete && \
-    find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
-    /opt/conda/bin/conda clean -afy
-
-# Create and activate conda environment, then install packages
-RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && \
-    conda create -n main python=3.8 -y && \
-    conda activate main && \
-    pip install torch torchvision torchaudio && \
-    pip install -U xformers --index-url https://download.pytorch.org/whl/cu121 && \
-    pip install ninja opencv-python wandb tqdm albumentations einops h5py kornia bounding_box matplotlib omegaconf 'trimesh[all]' gdown roma connected-components-3d positional_encodings && \
-    pip install --upgrade --no-cache-dir gdown"
-
-# install zellij
-RUN wget --quiet https://github.com/zellij-org/zellij/releases/download/v0.40.0/zellij-x86_64-unknown-linux-musl.tar.gz -O /tmp/zellij.tar.gz && \
-    tar -xzf /tmp/zellij.tar.gz -C /tmp && \
-    mv /tmp/zellij /usr/local/bin && \
-    rm /tmp/zellij.tar.gz
-
-# set path to conda
-ENV PATH /opt/conda/bin:$PATH
-```
-```
-sudo docker build . -t ankan999/conda-cuda-12.9
-sudo docker push ankan999/conda-cuda-12.9
-```
-
-## Apptainer commands to build .sif from scratch
-```
-apptainer pull mltoolkit-cuda12.1_build.sif docker://ankan999/conda-cuda-12.1:latest
-apptainer build --sandbox mltoolkit-cuda12.1_build mltoolkit-cuda12.1_build.sif
-apptainer shell --nv --writable --fakeroot mltoolkit-cuda12.1_build
-```
-```
-echo ". /opt/conda/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
-```
-```
-apt-get update
-apt install wget
-apt install -y nano
-apt-get install -y git
-apt install -y mesa-utils freeglut3-dev
-```
+## Build docker from scratch
 
 ```
-conda create -n main python=3.8
-conda activate main
-pip3 install torch torchvision torchaudio
-pip3 install -U xformers --index-url https://download.pytorch.org/whl/cu121
-pip3 install ninja opencv-python wandb tqdm albumentations einops h5py kornia bounding_box matplotlib omegaconf trimesh[all] gdown roma connected-components-3d positional_encodings 
-pip3 install --upgrade --no-cache-dir gdown
-pip3 install pyrender
-pip3 install "git+https://github.com/facebookresearch/pytorch3d.git"
-pip3 install 'git+https://github.com/facebookresearch/detectron2.git'
-```
-```
-apptainer build  mltoolkit-cuda12.1_build.sif mltoolkit-cuda12.1_build 
+# put Dockerfile in the same path
+sudo docker build -t mltoolkit-cuda-12.9:latest  .
+sudo apptainer build mltoolkit-cuda-12.9.sif docker-daemon://mltoolkit-cuda-12.9:latest
+hf upload ankankbhunia/backups mltoolkit-cuda-12.9.sif apptainer_sifs/mltoolkit-cuda12.9_lite.sif
 ```
 
-output file is ```mltoolkit-cuda12.1_build.sif``` 
-
-Download link - 1. [https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_uk/Documents/Containers/mltoolkit-cuda12.1_build.sif?csf=1&web=1&e=rVDbcZ](https://uoe-my.sharepoint.com/:u:/r/personal/s2514643_ed_ac_uk/Documents/Containers/mltoolkit-cuda12.1_build.sif?csf=1&web=1&e=rVDbcZ)
-
-2. (more recent) [https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif](https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif)
+[[Download pre-built .sif files]](https://huggingface.co/ankankbhunia/backups/tree/main/apptainer_sifs)
 
 ## Login to Docker using apptainer remote login
 
