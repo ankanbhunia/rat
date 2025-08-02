@@ -34,8 +34,5 @@ fi
 
 echo "Repository is now up to date with the latest remote version."
 
-# Run the cloudflared download script to ensure the latest version is present
-echo "Ensuring cloudflared-linux-amd64 is up to date..."
-bash "$RAT_DIR_ABS_PATH/bin/download_cloudflared.sh"
 
 exit 0
