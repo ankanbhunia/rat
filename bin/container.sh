@@ -15,6 +15,58 @@ check_apptainer() {
     fi
 }
 
+# Function to perform image download and sandbox build
+perform_build() {
+    local env_name=$1
+    local config_file=$2
+    local base_image_from_config=$3 # This is the base_image from the config file
+    local sandbox_folder=$4
+    local code_directory=$5
+    local data_directory=$6
+    local apptainer_prefix_value=$7
+
+    local image_source=""
+
+    if [[ "$base_image_from_config" == docker://* ]]; then
+        image_source="$base_image_from_config"
+    else
+        local sif_filename=$(basename "$base_image_from_config")
+        local cached_sif_path="$SIF_CACHE_DIR/$sif_filename"
+        image_source="$cached_sif_path" # This is the source for apptainer build
+        
+        if [ ! -f "$cached_sif_path" ]; then
+            echo "Downloading $sif_filename..."
+            if command -v pv &> /dev/null; then
+                wget -O - "$base_image_from_config" | pv -s "$(wget --spider "$base_image_from_config" 2>&1 | grep 'Length:' | awk '{print $2}')" > "$cached_sif_path"
+            else
+                wget -O "$cached_sif_path" "$base_image_from_config"
+            fi
+            
+            if [ $? -ne 0 ]; then
+                echo "Error: Failed to download .sif file."
+                rm "$config_file"
+                exit 1
+            fi
+            echo "Download complete. SIF file saved to $cached_sif_path"
+        else
+            echo "Using cached SIF file: $cached_sif_path"
+        fi
+    fi
+
+    echo "Building sandbox environment in $sandbox_folder from $image_source..."
+    apptainer build --sandbox "$sandbox_folder" "$image_source"
+    if [ $? -ne 0 ]; then
+        echo "Error: Apptainer build failed."
+        rm "$config_file"
+        if [ -d "$sandbox_folder" ]; then
+            echo "Cleaning up partially created sandbox directory: $sandbox_folder..."
+            rm -rf "$sandbox_folder"
+        fi
+        exit 1
+    fi
+    echo "Environment '$env_name' setup complete. You can now run 'rat-cli container --start $env_name' to enter the container."
+}
+
 # Function to read config
 read_config() {
     local env_name=$1
@@ -54,8 +106,35 @@ container_create() {
 
     local config_file="$CONTAINERS_DIR/$env_name.yaml"
     if [ -f "$config_file" ]; then
-        echo "Error: Environment '$env_name' already exists. Please choose a different name or delete the existing one."
-        exit 1
+        echo "Error: Environment '$env_name' already exists. The config file '$config_file' already exists."
+        echo "What would you like to do?"
+        echo "1) Discard the current config and create a new one"
+        echo "2) Rebuild from the current config (skip to download/build)"
+        echo "3) Abort"
+        read -p "Enter choice (1, 2, or 3): " existing_config_choice
+
+        case "$existing_config_choice" in
+            1)
+                echo "Discarding existing config and creating a new one."
+                rm "$config_file"
+                # Continue with the rest of container_create, which will write a new config
+                ;;
+            2)
+                echo "Rebuilding from existing config."
+                read_config "$env_name" # This populates global BASE_IMAGE, SANDBOX_FOLDER etc.
+                perform_build "$env_name" "$config_file" "$BASE_IMAGE" "$SANDBOX_FOLDER" "$CODE_DIRECTORY" "$DATA_DIRECTORY" "$APPTAINER_PREFIX"
+                echo "You can now run 'rat-cli container --start $env_name' to enter the container."
+                exit 0
+                ;;
+            3)
+                echo "Aborting."
+                exit 1
+                ;;
+            *)
+                echo "Invalid choice. Aborting."
+                exit 1
+                ;;
+        esac
     fi
 
     # Ask user for image type
@@ -65,63 +144,39 @@ container_create() {
     read -p "Enter choice (1 or 2, default: 1): " image_type_choice
     image_type_choice="${image_type_choice:-1}"
 
-    local base_image=""
-    local image_source="" # Will be the actual source for apptainer build
+    local base_image_input_for_new_config="" # This will be the value stored in config
 
     if [[ "$image_type_choice" == "1" ]]; then
-        read -p "Enter base image .sif link (default: https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif): " base_image_input
-        base_image="${base_image_input:-https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.1_build_v0.1.sif}"
-        
-        local sif_filename=$(basename "$base_image")
-        local cached_sif_path="$SIF_CACHE_DIR/$sif_filename"
-
-        if [ ! -f "$cached_sif_path" ]; then
-            echo "Downloading $sif_filename..."
-            if command -v pv &> /dev/null; then
-                wget -O - "$base_image" | pv -s "$(wget --spider "$base_image" 2>&1 | grep 'Length:' | awk '{print $2}')" > "$cached_sif_path"
-            else
-                wget -O "$cached_sif_path" "$base_image"
-            fi
-            
-            if [ $? -ne 0 ]; then
-                echo "Error: Failed to download .sif file."
-                rm "$config_file"
-                exit 1
-            fi
-            echo "Download complete. SIF file saved to $cached_sif_path"
-        else
-            echo "Using cached SIF file: $cached_sif_path"
-        fi
-        image_source="$cached_sif_path" # Use cached SIF path as source
+        read -p "Enter base image .sif link (default: https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.9_lite.sif): " base_image_input_for_new_config
+        base_image_input_for_new_config="${base_image_input_for_new_config:-https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.9_lite.sif}"
     elif [[ "$image_type_choice" == "2" ]]; then
         read -p "Enter Docker image name (e.g., ubuntu:latest): " docker_image_name
         if [ -z "$docker_image_name" ]; then
             echo "Error: Docker image name cannot be empty."
             exit 1
         fi
-        base_image="docker://$docker_image_name" # Store the docker URI in config
-        image_source="$base_image" # Use the docker URI as source for build
+        base_image_input_for_new_config="docker://$docker_image_name"
     else
         echo "Invalid choice. Exiting."
         exit 1
     fi
 
     local default_sandbox_folder="$CONTAINERS_DIR/$env_name-sandbox"
-    read -p "Enter environment directory (SANDBOX_FOLDER) (default: $default_sandbox_folder): " sandbox_folder_input
+    read -e -p "Enter environment directory (SANDBOX_FOLDER) (default: $default_sandbox_folder): " sandbox_folder_input
     local sandbox_folder="${sandbox_folder_input:-$default_sandbox_folder}"
 
-    if [ -d "$sandbox_folder" ]; then
-        echo "Error: Sandbox directory '$sandbox_folder' already exists. Please choose a different directory or delete the existing one."
-        exit 1
-    fi
+    # if [ -d "$sandbox_folder" ]; then
+    #     echo "Error: Sandbox directory '$sandbox_folder' already exists. Please choose a different directory or delete the existing one."
+    #     exit 1
+    # fi
 
-    read -p "Enter code directory to mount (optional): " code_directory
+    read -e -p "Enter code directory to mount (optional): " code_directory
     if [ -n "$code_directory" ] && [ ! -d "$code_directory" ]; then
         echo "Error: Code directory '$code_directory' does not exist. Please provide a valid path."
         exit 1
     fi
 
-    read -p "Enter data directory to mount (optional): " data_directory
+    read -e -p "Enter data directory to mount (optional): " data_directory
     if [ -n "$data_directory" ] && [ ! -d "$data_directory" ]; then
         echo "Error: Data directory '$data_directory' does not exist. Please provide a valid path."
         exit 1
@@ -137,18 +192,8 @@ container_create() {
 
     echo "Config file created: $config_file"
 
-    echo "Building sandbox environment in $sandbox_folder from $image_source..."
-    apptainer build --sandbox "$sandbox_folder" "$image_source"
-    if [ $? -ne 0 ]; then
-        echo "Error: Apptainer build failed."
-        rm "$config_file"
-        if [ -d "$sandbox_folder" ]; then
-            echo "Cleaning up partially created sandbox directory: $sandbox_folder..."
-            rm -rf "$sandbox_folder"
-        fi
-        exit 1
-    fi
-    echo "Environment '$env_name' setup complete. You can now run 'rat-cli container --start $env_name' to enter the container."
+    # Call perform_build for new environment creation
+    perform_build "$env_name" "$config_file" "$base_image_input_for_new_config" "$sandbox_folder" "$code_directory" "$data_directory" "$apptainer_prefix_value"
 }
 
 # Subcommand: start
@@ -203,7 +248,7 @@ container_save() {
         exit 1
     fi
 
-    read -p "Enter output path for the .sif file (e.g., /path/to/my_env.sif): " output_sif_path
+    read -e -p "Enter output path for the .sif file (e.g., /path/to/my_env.sif): " output_sif_path
     if [ -z "$output_sif_path" ]; then
         echo "Error: Output SIF path cannot be empty."
         exit 1
