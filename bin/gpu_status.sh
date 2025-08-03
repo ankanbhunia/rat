@@ -6,6 +6,9 @@
 total_gpus_sum=0
 total_occupied_gpus_sum=0
 total_available_gpus_sum=0
+total_cpus_sum=0
+total_occupied_cpus_sum=0
+total_available_cpus_sum=0
 down_nodes_count=0
 occupied_nodes_count=0
 partial_nodes_count=0
@@ -14,6 +17,9 @@ total_nodes_count=0
 
 # Declare associative array for node primary GPU types
 declare -A node_primary_gpu_type
+# Declare associative arrays for available GPUs and CPUs per node
+declare -A node_available_gpus
+declare -A node_available_cpus
 
 # Pre-populate node_primary_gpu_type by iterating through sinfo and scontrol show node
 while IFS= read -r line; do
@@ -28,7 +34,7 @@ while IFS= read -r line; do
             break # Take the first GPU type found as primary for this node
         fi
     done
-done < <(sinfo -N -o "%10N %12P %10T" | sort -k1,1 -u)
+done < <(sinfo -N -o "%10N %P %10T" | sort -k1,1 -u)
 
 # Get occupied GPU counts per node, by type
 declare -A occupied_gpus_by_type
@@ -84,6 +90,8 @@ while IFS= read -r line; do
     node_info=$(scontrol show node "$node" 2>/dev/null)
     if [ -z "$node_info" ]; then continue; fi
     gres_total_str=$(echo "$node_info" | grep -o 'Gres=[^ ]*' | cut -d= -f2)
+    cpu_alloc=$(echo "$node_info" | grep -o 'CPUAlloc=[0-9]*' | cut -d= -f2)
+    cpu_tot=$(echo "$node_info" | grep -o 'CPUTot=[0-9]*' | cut -d= -f2)
 
     gpus_display_parts=()
     
@@ -97,6 +105,16 @@ while IFS= read -r line; do
     node_occupied_gpus=0
     gpu_type_count=0 # Counter for distinct GPU types on this node
 
+    # Initialize per-node CPU counters
+    node_total_cpus=${cpu_tot:-0}
+    node_occupied_cpus=${cpu_alloc:-0}
+    node_remaining_cpus=$((node_total_cpus - node_occupied_cpus))
+    node_available_cpus[$node]=$node_remaining_cpus # Store available CPUs
+
+    total_cpus_sum=$((total_cpus_sum + node_total_cpus))
+    total_occupied_cpus_sum=$((total_occupied_cpus_sum + node_occupied_cpus))
+
+    node_current_available_gpus=0 # Initialize for this node
     IFS=',' read -ra gres_parts <<< "$gres_total_str"
     for part in "${gres_parts[@]}"; do
         if [[ $part =~ gpu:([^:]+):([0-9]+) ]]; then
@@ -126,8 +144,10 @@ while IFS= read -r line; do
                 has_any_occupied_gpu=true
             fi
             gpus_display_parts+=("\033[1m$gpu_type_upper\033[22m [$occupied_count/$total_gpus]")
+            node_current_available_gpus=$((node_current_available_gpus + (total_gpus - occupied_count)))
         fi
     done
+    node_available_gpus[$node]=$node_current_available_gpus # Store available GPUs
 
     # Determine node state color (based on sinfo state, as before)
     node_color_code="32" # Green default
@@ -180,9 +200,11 @@ while IFS= read -r line; do
     fi
 
     # Print the final formatted line
-    echo -e "\033[0m($counter) \033[${availability_color_code}m$availability_status \033[1m$node\033[22m, Partition: $partition, State: $state, GPUs: $gpus_display_str\033[0m"
+    echo -e "\033[0m($counter) \033[${availability_color_code}m$availability_status \033[1m$node\033[22m, Partition: $partition, State: $state, CPUs: [$node_occupied_cpus/$node_total_cpus], GPUs: $gpus_display_str\033[0m"
+    node_map[$counter]="$node" # Store the mapping
+    node_partition_map[$node]="$partition" # Store the partition for the node
     ((counter++))
-done < <(sinfo -N -o "%10N %12P %10T" | sort -k1,1 -u)
+done < <(sinfo -N -o "%10N %P %10T" | sort -k1,1 -u)
 
 echo ""
 echo "------------------------------------------------------------------"
@@ -191,11 +213,69 @@ echo -e "Availability Status: \033[32mGreen\033[0m=[available], \033[33mYellow\0
 echo "------------------------------------------------------------------"
 
 total_available_gpus_sum=$((total_gpus_sum - total_occupied_gpus_sum))
+total_available_cpus_sum=$((total_cpus_sum - total_occupied_cpus_sum))
 
 echo ""
 echo "------------------------------------------------------------------"
 echo "Cluster Summary"
 echo "------------------------------------------------------------------"
 echo -e "\033[0mNodes: $total_nodes_count total. $available_nodes_count available, $partial_nodes_count partial, $occupied_nodes_count occupied, $down_nodes_count down.\033[0m"
+echo -e "\033[0mCPUs:  $total_cpus_sum total. $total_available_cpus_sum available, $total_occupied_cpus_sum occupied.\033[0m"
 echo -e "\033[0mGPUs:  $total_gpus_sum total. $total_available_gpus_sum available, $total_occupied_gpus_sum occupied.\033[0m"
 echo "------------------------------------------------------------------"
+
+# User input for node selection
+echo ""
+echo "Enter the bullet numbers of the nodes you want to select (e.g., 1,3,5) or press Enter to skip:"
+read -r selected_numbers
+
+selected_nodes_list=""
+if [[ -n "$selected_numbers" ]]; then
+    IFS=',' read -ra numbers_array <<< "$selected_numbers"
+    for num in "${numbers_array[@]}"; do
+        num=$(echo "$num" | xargs) # Trim whitespace
+        if [[ -n "${node_map[$num]}" ]]; then
+            if [[ -n "$selected_nodes_list" ]]; then
+                selected_nodes_list+=","
+            fi
+            selected_nodes_list+="${node_map[$num]}"
+        else
+            echo "Warning: Bullet number '$num' is invalid and will be ignored."
+        fi
+    done
+fi
+
+if [[ -n "$selected_nodes_list" ]]; then
+    echo ""
+    echo "Selected nodes: $selected_nodes_list"
+
+    min_available_gpus=-1
+    min_available_cpus=-1
+    selected_partition=""
+
+    # Find the minimum available GPUs and CPUs among selected nodes
+    IFS=',' read -ra nodes_array <<< "$selected_nodes_list"
+    for node_name in "${nodes_array[@]}"; do
+        current_gpus=${node_available_gpus[$node_name]:-0}
+        current_cpus=${node_available_cpus[$node_name]:-0}
+
+        if [[ -z "$selected_partition" ]]; then
+            selected_partition=${node_partition_map[$node_name]} # Take partition of the first selected node
+        fi
+
+        if (( min_available_gpus == -1 || current_gpus < min_available_gpus )); then
+            min_available_gpus=$current_gpus
+        fi
+        if (( min_available_cpus == -1 || current_cpus < min_available_cpus )); then
+            min_available_cpus=$current_cpus
+        fi
+    done
+
+    # Ensure minimums are not negative
+    if (( min_available_gpus < 0 )); then min_available_gpus=0; fi
+    if (( min_available_cpus < 0 )); then min_available_cpus=0; fi
+
+    echo -e "\nTo run a job on the selected nodes, use a command like:\n  rat-cli job --node-ids \"$selected_nodes_list\" --name \"my_job\" --nodes 1 --partition \"$selected_partition\" --time \"7-00:00:00\" --gpu-nos $min_available_gpus --cpu-nos $min_available_cpus --domain your.domain.here --jumpserver user@example.com\nRemember to replace 'your.domain.here' with your actual domain and adjust other parameters as needed."
+else
+    echo "No nodes selected."
+fi
