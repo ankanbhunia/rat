@@ -220,10 +220,18 @@ container_start() {
         mkdir -p "$SANDBOX_FOLDER"/data
     fi
 
+    if [ ! -d "$SANDBOX_FOLDER"/rat ]; then
+        mkdir -p "$SANDBOX_FOLDER"/rat
+    fi
+
     local full_start_command="$APPTAINER_PREFIX"
     [ -n "$CODE_DIRECTORY" ] && full_start_command="$full_start_command --bind $CODE_DIRECTORY:/code"
     [ -n "$DATA_DIRECTORY" ] && full_start_command="$full_start_command --bind $DATA_DIRECTORY:/data"
+    full_start_command="$full_start_command --bind $RAT_HOME:/rat"
+    full_start_command="$full_start_command --env PATH=/rat:$PATH"
+    
     full_start_command="$full_start_command $SANDBOX_FOLDER"
+    
     
     echo "Starting container environment '$env_name'..."
     echo "$full_start_command"
