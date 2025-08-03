@@ -124,6 +124,7 @@ fi
 
 cat <<EOT > "$TEMP_SCRIPT"
 #!/bin/bash
+#SBATCH --chdir=$HOME
 #SBATCH --job-name=${JOB_NAME}           # Job name
 ${NODES_SLURM}
 ${NODE_LIST_SLURM}     # Node list (optional)
@@ -131,6 +132,7 @@ ${GPU_NOS_SLURM}       # Number of GPUs required (optional)
 #SBATCH --cpus-per-task=${CPU_NOS}  # Number of CPUs required
 #SBATCH --partition=${PARTITION}
 #SBATCH --time=${TIME}           # Walltime
+
 
 # Ensure rat-cli is in PATH for the SLURM job, or use absolute path
 # If rat-cli is not in the default PATH for SLURM jobs, uncomment and adjust the following line:
