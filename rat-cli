@@ -92,7 +92,11 @@ case "$SUBCOMMAND" in
         bash "$SCRIPT_ABS_DIR/bin/login_cloudflare.sh" "$@"
         ;;
     job)
-        bash "$SCRIPT_ABS_DIR/bin/job.sh" "$@"
+        if [[ "$1" == "--usage" ]]; then
+            bash "$SCRIPT_ABS_DIR/bin/gpu_status.sh"
+        else
+            bash "$SCRIPT_ABS_DIR/bin/job.sh" "$@"
+        fi
         ;;
     sync)
         bash "$SCRIPT_ABS_DIR/bin/sync.sh" "$@"
