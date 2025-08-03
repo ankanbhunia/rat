@@ -15,6 +15,15 @@ check_apptainer() {
     fi
 }
 
+# Function to check if scp is available
+check_scp() {
+    if ! command -v scp &> /dev/null; then
+        echo "Error: scp is not installed or not in PATH."
+        echo "Please ensure OpenSSH client is installed to use remote file functionalities."
+        exit 1
+    fi
+}
+
 # Function to perform image download and sandbox build
 perform_build() {
     local env_name=$1
@@ -26,10 +35,24 @@ perform_build() {
     local apptainer_prefix_value=$7
 
     local image_source=""
+    local image_type="" # Infer image type within this function
 
     if [[ "$base_image_from_config" == docker://* ]]; then
-        image_source="$base_image_from_config"
+        image_type="4" # Docker image
+    elif [[ "$base_image_from_config" == http://* || "$base_image_from_config" == https://* ]]; then
+        image_type="1" # Public direct SIF link
+    elif [[ "$base_image_from_config" =~ ^([^/]+@)?[^/:]+:.+ ]]; then # Matches [user@]host:path
+        image_type="3" # Remote SIF file path
+    elif [ -f "$base_image_from_config" ]; then
+        image_type="2" # Local SIF file path
     else
+        echo "Error: Could not infer image type or file does not exist for '$base_image_from_config'. Please provide a valid image source."
+        exit 1
+    fi
+
+    if [[ "$image_type" == "4" ]]; then # Docker image
+        image_source="$base_image_from_config"
+    elif [[ "$image_type" == "1" ]]; then # Public direct SIF link
         local sif_filename=$(basename "$base_image_from_config")
         local cached_sif_path="$SIF_CACHE_DIR/$sif_filename"
         image_source="$cached_sif_path" # This is the source for apptainer build
@@ -50,9 +73,51 @@ perform_build() {
         else
             echo "Using cached SIF file: $cached_sif_path"
         fi
+    elif [[ "$image_type" == "3" ]]; then # Remote SIF file path
+        check_scp # Ensure scp is available
+        local remote_sif_full_path="$base_image_from_config" # e.g., user@host:/path/to/image.sif
+        
+        # Extract just the path part from the remote_sif_full_path
+        local remote_file_path_only=$(echo "$remote_sif_full_path" | cut -d':' -f2-)
+        
+        local sif_filename=$(basename "$remote_file_path_only") # Correctly extract filename from path only
+        local cached_sif_path="$SIF_CACHE_DIR/$sif_filename"
+        image_source="$cached_sif_path" # This is the source for apptainer build
+
+        if [ ! -f "$cached_sif_path" ]; then
+            echo "Checking remote file existence: $remote_sif_full_path..."
+            local remote_host_user_part=$(echo "$remote_sif_full_path" | cut -d':' -f1)
+            local remote_file_path_only=$(echo "$remote_sif_full_path" | cut -d':' -f2-)
+            
+            # Check if the remote file exists using ssh and ls
+            # This relies on ssh to correctly parse the remote host and use ~/.ssh/config
+            if ! ssh "$remote_host_user_part" "ls \"$remote_file_path_only\" &> /dev/null"; then
+                echo "Error: Remote SIF file '$remote_file_path_only' not found on '$remote_host_user_part'."
+                echo "Please ensure the file exists and you have appropriate SSH access and permissions."
+                exit 1
+            fi
+
+            echo "Downloading remote SIF file '$remote_sif_full_path' to '$cached_sif_path' using scp..."
+            scp "$remote_sif_full_path" "$cached_sif_path"
+            if [ $? -ne 0 ]; then
+                echo "Error: Failed to download remote .sif file using scp. Please check permissions or network."
+                exit 1
+            fi
+            echo "Download complete. SIF file saved to $cached_sif_path"
+        else
+            echo "Using cached SIF file from remote source: $cached_sif_path"
+        fi
+    elif [[ "$image_type" == "2" ]]; then # Local path
+        if [ ! -f "$base_image_from_config" ]; then
+            echo "Error: Local SIF file '$base_image_from_config' not found."
+            exit 1
+        fi
+        image_source="$base_image_from_config"
+        echo "Using local SIF file: $image_source"
     fi
 
     echo "Building sandbox environment in $sandbox_folder from $image_source..."
+    mkdir -p "$sandbox_folder" # Ensure the sandbox directory exists
     apptainer build --sandbox "$sandbox_folder" "$image_source"
     if [ $? -ne 0 ]; then
         echo "Error: Apptainer build failed."
@@ -93,6 +158,7 @@ read_config() {
 # Subcommand: create
 container_create() {
     check_apptainer
+    check_scp # Ensure scp is available for remote path inference
     local env_name=$1
     if [ -z "$env_name" ]; then
         echo "Usage: rat-cli container --create <env_name>"
@@ -135,29 +201,9 @@ container_create() {
         esac
     fi
 
-    # Ask user for image type
-    echo "Choose base image type:"
-    echo "1) Apptainer/Singularity SIF link (e.g., https://.../image.sif)"
-    echo "2) Docker image (e.g., ubuntu:latest, nvidia/cuda:12.1.0-devel-ubuntu22.04)"
-    read -p "Enter choice (1 or 2, default: 1): " image_type_choice
-    image_type_choice="${image_type_choice:-1}"
-
     local base_image_input_for_new_config="" # This will be the value stored in config
 
-    if [[ "$image_type_choice" == "1" ]]; then
-        read -p "Enter base image .sif link (default: https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.9_lite.sif): " base_image_input_for_new_config
-        base_image_input_for_new_config="${base_image_input_for_new_config:-https://huggingface.co/ankankbhunia/backups/resolve/main/apptainer_sifs/mltoolkit-cuda12.9_lite.sif}"
-    elif [[ "$image_type_choice" == "2" ]]; then
-        read -p "Enter Docker image name (e.g., ubuntu:latest): " docker_image_name
-        if [ -z "$docker_image_name" ]; then
-            echo "Error: Docker image name cannot be empty."
-            exit 1
-        fi
-        base_image_input_for_new_config="docker://$docker_image_name"
-    else
-        echo "Invalid choice. Exiting."
-        exit 1
-    fi
+    read -p "Enter base image (e.g., https://.../image.sif, /path/to/image.sif, user@host:/path/to/image.sif, ubuntu:latest): " base_image_input_for_new_config
 
     local default_sandbox_folder="$CONTAINERS_DIR/$env_name-sandbox"
     read -e -p "Enter environment directory (SANDBOX_FOLDER) (default: $default_sandbox_folder): " sandbox_folder_input
