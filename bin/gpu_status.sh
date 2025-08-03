@@ -20,10 +20,13 @@ declare -A node_primary_gpu_type
 # Declare associative arrays for available GPUs and CPUs per node
 declare -A node_available_gpus
 declare -A node_available_cpus
+# Declare associative array for node partitions
+declare -A node_partition_map
 
-# Pre-populate node_primary_gpu_type by iterating through sinfo and scontrol show node
+# Pre-populate node_primary_gpu_type and node_partition_map by iterating through sinfo and scontrol show node
 while IFS= read -r line; do
     node=$(echo "$line" | awk '{print $1}')
+    partition=$(echo "$line" | awk '{print $2}') # Get partition here
     node_info=$(scontrol show node "$node" 2>/dev/null)
     if [ -z "$node_info" ]; then continue; fi
     gres_total_str=$(echo "$node_info" | grep -o 'Gres=[^ ]*' | cut -d= -f2)
@@ -34,11 +37,32 @@ while IFS= read -r line; do
             break # Take the first GPU type found as primary for this node
         fi
     done
-done < <(sinfo -N -o "%10N %P %10T" | sort -k1,1 -u)
+    node_partition_map[$node]="$partition" # Populate node_partition_map here
+done < <(sinfo -N -o "%10N %P %10T"| sort -k1,1 -u)
 
-# Get occupied GPU counts per node, by type
+# Get occupied GPU counts per node, by type, and job time left
 declare -A occupied_gpus_by_type
-while read -r nodelist gpus_alloc; do
+declare -A node_min_time_left # Stores minimum time left for jobs on a node in seconds
+
+# Function to convert D-HH:MM:SS or HH:MM:SS to seconds
+time_to_seconds() {
+    local time_str="$1"
+    local days=0 hours=0 minutes=0 seconds=0
+
+    if [[ "$time_str" =~ ([0-9]+)-([0-9]{2}):([0-9]{2}):([0-9]{2}) ]]; then
+        days=${BASH_REMATCH[1]}
+        hours=${BASH_REMATCH[2]}
+        minutes=${BASH_REMATCH[3]}
+        seconds=${BASH_REMATCH[4]}
+    elif [[ "$time_str" =~ ([0-9]{2}):([0-9]{2}):([0-9]{2}) ]]; then
+        hours=${BASH_REMATCH[1]}
+        minutes=${BASH_REMATCH[2]}
+        seconds=${BASH_REMATCH[3]}
+    fi
+    echo $(( 10#$days * 86400 + 10#$hours * 3600 + 10#$minutes * 60 + 10#$seconds ))
+}
+
+while read -r nodelist gpus_alloc time_left; do
     # Clean the (IDX:...) part from the gres string
     gpus_alloc_clean=$(echo "$gpus_alloc" | sed 's/(.*)//')
     
@@ -56,6 +80,8 @@ while read -r nodelist gpus_alloc; do
         continue # Skip if neither format matches
     fi
 
+    job_time_left_seconds=$(time_to_seconds "$time_left")
+
     for single_node in $(scontrol show hostnames $nodelist); do
         current_gpu_type="$job_gpu_type"
         if [[ -z "$current_gpu_type" ]]; then
@@ -69,8 +95,13 @@ while read -r nodelist gpus_alloc; do
         fi
         key="$single_node,$current_gpu_type"
         occupied_gpus_by_type[$key]=$(( ${occupied_gpus_by_type[$key]:-0} + num_gpus ))
+
+        # Update minimum time left for the node
+        if [[ -z "${node_min_time_left[$single_node]}" || "$job_time_left_seconds" -lt "${node_min_time_left[$single_node]}" ]]; then
+            node_min_time_left[$single_node]="$job_time_left_seconds"
+        fi
     done
-done < <(squeue -h -t R -o "%R %b" | grep "gpu")
+done < <(squeue -h -t R -o "%R %b %L" | grep "gpu")
 
 
 echo "------------------------------------------------------------------"
@@ -82,8 +113,11 @@ counter=1
 # Process substitution is used here to avoid creating a subshell for the while loop
 # This ensures that the counter variables are updated in the main shell
 while IFS= read -r line; do
-    ((total_nodes_count++))
     node=$(echo "$line" | awk '{print $1}')
+    # Skip header line from sinfo
+    if [[ "$node" == "NODELIST" ]]; then continue; fi
+
+    ((total_nodes_count++))
     partition=$(echo "$line" | awk '{print $2}')
     state=$(echo "$line" | awk '{print $3}')
 
@@ -199,14 +233,34 @@ while IFS= read -r line; do
         gpus_display_str+=" (Total: $node_occupied_gpus/$node_total_gpus)"
     fi
 
+    # Determine likelihood of availability
+    likelihood_status=""
+    likelihood_color_code="37" # White color for likelihood status
+    if (( node_occupied_gpus > 0 )); then
+        if [[ -n "${node_min_time_left[$node]}" ]]; then
+            min_time_seconds=${node_min_time_left[$node]}
+            min_time_display=$(printf '%d-%02d:%02d:%02d' $((min_time_seconds/86400)) $(( (min_time_seconds%86400)/3600 )) $(( (min_time_seconds%3600)/60 )) $((min_time_seconds%60)))
+
+            if (( min_time_seconds < 3600 )); then # Less than 1 hour
+                likelihood_status=" ($min_time_display remaining)"
+            elif (( min_time_seconds >= 3600 && min_time_seconds < 21600 )); then # Between 1 and 6 hours
+                likelihood_status=" (Medium - $min_time_display remaining)"
+            else # Greater than 6 hours
+                likelihood_status=" ($min_time_display remaining)"
+            fi
+        else
+            likelihood_status=" (Unknown)"
+        fi
+    fi
+
     # Print the final formatted line
-    echo -e "\033[0m($counter) \033[${availability_color_code}m$availability_status \033[1m$node\033[22m, Partition: $partition, State: $state, CPUs: [$node_occupied_cpus/$node_total_cpus], GPUs: $gpus_display_str\033[0m"
+    echo -e "\033[0m($counter) \033[${availability_color_code}m$availability_status \033[1m$node\033[22m, Partition: $partition, State: $state, CPUs: [$node_occupied_cpus/$node_total_cpus], GPUs: $gpus_display_str\033[${likelihood_color_code}m$likelihood_status\033[0m"
     node_map[$counter]="$node" # Store the mapping
-    node_partition_map[$node]="$partition" # Store the partition for the node
     ((counter++))
 done < <(sinfo -N -o "%10N %P %10T" | sort -k1,1 -u)
 
 echo ""
+
 echo "------------------------------------------------------------------"
 echo -e "Node State: \033[32mGreen\033[0m=idle, \033[33mYellow\033[0m=mixed/occupied, \033[31mRed\033[0m=down/drained"
 echo -e "Availability Status: \033[32mGreen\033[0m=[available], \033[33mYellow\033[0m=[partial], \033[31mRed\033[0m=[unavailable], \033[90mGrey\033[0m=[occupied]"
@@ -252,7 +306,6 @@ if [[ -n "$selected_nodes_list" ]]; then
     min_available_gpus=-1
     min_available_cpus=-1
     selected_partition=""
-
     # Find the minimum available GPUs and CPUs among selected nodes
     IFS=',' read -ra nodes_array <<< "$selected_nodes_list"
     for node_name in "${nodes_array[@]}"; do
