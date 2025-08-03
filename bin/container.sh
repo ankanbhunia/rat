@@ -56,7 +56,6 @@ perform_build() {
     apptainer build --sandbox "$sandbox_folder" "$image_source"
     if [ $? -ne 0 ]; then
         echo "Error: Apptainer build failed."
-        rm "$config_file"
         if [ -d "$sandbox_folder" ]; then
             echo "Cleaning up partially created sandbox directory: $sandbox_folder..."
             rm -rf "$sandbox_folder"
