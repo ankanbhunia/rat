@@ -69,14 +69,9 @@ execute_command() {
         echo -e "${BLUE_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "${RESET_COLOR}" # Reset color at the end
 
-        bash "$@"
-        
-        #> "$LOG_FILE" 2>&1
-        # echo -e "${RED_BG_COLOR}$(printf '%-*s' $((LINE_LENGTH)) "rat-cli command ${SUBCOMMAND} finished running.")${RESET_COLOR}"
-        # echo "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        # echo "Output of the command:"
-        # tail -n 100 "$LOG_FILE"
-        # echo "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        bash "$@" 2>&1 | tee "$LOG_FILE"
+
+
     fi
 }
 
