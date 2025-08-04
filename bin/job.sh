@@ -133,12 +133,17 @@ ${GPU_NOS_SLURM}       # Number of GPUs required (optional)
 # If rat-cli is not in the default PATH for SLURM jobs, uncomment and adjust the following line:
 # export PATH="$PARENT_ABS_DIR:$PATH"
 
+# Send email notification
+bash "$PARENT_ABS_DIR"/bin/send_mail.sh "${DOMAIN}" "${GPU_NOS}" "${TIME}" "SLURM Job Started"
+
 # Call rat-cli vscode with the appropriate arguments
 if [ -n "$JUMPSERVER" ]; then
     "$PARENT_ABS_DIR"/rat-cli vscode --domain "${DOMAIN}" --jumpserver "${JUMPSERVER}"
 else
     "$PARENT_ABS_DIR"/rat-cli vscode --domain "${DOMAIN}"
 fi
+
+
 EOT
 
 # Print the generated SLURM script for reference
