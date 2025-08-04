@@ -44,13 +44,9 @@ show_help() {
     echo "  rat-cli job --usage"
 }
 
-# Function to summarize GPU usage on each node
-summarize_gpu_usage() {
-    squeue | grep -E 'crannog|damnii' | awk '{print $NF}' | sort | uniq -c | awk '{print "Node: " $2 ", GPUs: " $1}'
-}
 
 # Parse command-line arguments
-TEMP=$(getopt -o h --long node-ids:,name:,nodes:,partition:,time:,gpu-nos:,cpu-nos:,domain:,jumpserver:,usage,help -n 'rat-cli job' -- "$@")
+TEMP=$(getopt -o h --long node-ids:,name:,nodes:,partition:,time:,gpu-nos:,cpu-nos:,domain:,jumpserver:,help -n 'rat-cli job' -- "$@")
 
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
@@ -78,10 +74,9 @@ while true ; do
         --cpu-nos) CPU_NOS="$2" ; shift 2 ;;
         --domain) DOMAIN="$2" ; shift 2 ;;
         --jumpserver) JUMPSERVER="$2" ; shift 2 ;;
-        --usage) summarize_gpu_usage ; exit 0 ;;
         -h|--help) show_help ; exit 0 ;;
         --) shift ; break ;;
-        *) echo "Internal error!" ; exit 1 ;;
+        *) echo "Internal error!" ; exit 1 ; fi
     esac
 done
 
