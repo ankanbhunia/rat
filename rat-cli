@@ -90,9 +90,9 @@ case "$SUBCOMMAND" in
         ;;
     job)
         if [[ "$1" == "--usage" ]]; then
-            bash "$SCRIPT_ABS_DIR/bin/gpu_status.sh"
+            bash "$SCRIPT_ABS_DIR/bin/gpu_status.sh" "$2"
         else
-            bash "$SCRIPT_ABS_DIR/bin/job.sh" "$@"
+            bash "$SCRIPT_ABS_DIR/bin/job.sh" "$@" 
         fi
         ;;
     sync)
