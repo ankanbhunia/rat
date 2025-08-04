@@ -2,6 +2,9 @@
 
 # Script to visualize GPU and node status in a Slurm cluster
 
+# Get the search term from the first argument
+search_term="$1"
+
 # Initialize summary counters
 total_gpus_sum=0
 total_occupied_gpus_sum=0
@@ -22,28 +25,73 @@ declare -A node_available_gpus
 declare -A node_available_cpus
 # Declare associative array for node partitions
 declare -A node_partition_map
+# Declare associative array for pre-expanded nodelists
+declare -A expanded_nodelists
 
-# Pre-populate node_primary_gpu_type and node_partition_map by iterating through sinfo and scontrol show node
+
+# Fetch all scontrol show node details once
+declare -A node_details
+echo "Fetching node details..."
+current_node=""
 while IFS= read -r line; do
-    node=$(echo "$line" | awk '{print $1}')
-    partition=$(echo "$line" | awk '{print $2}') # Get partition here
-    node_info=$(scontrol show node "$node" 2>/dev/null)
-    if [ -z "$node_info" ]; then continue; fi
-    gres_total_str=$(echo "$node_info" | grep -o 'Gres=[^ ]*' | cut -d= -f2)
-    IFS=',' read -ra gres_parts <<< "$gres_total_str"
-    for part in "${gres_parts[@]}"; do
-        if [[ $part =~ gpu:([^:]+):([0-9]+) ]]; then
-            node_primary_gpu_type[$node]=${BASH_REMATCH[1]}
-            break # Take the first GPU type found as primary for this node
+    if [[ "$line" =~ NodeName=([^ ]+) ]]; then
+        current_node=${BASH_REMATCH[1]}
+        node_details[$current_node]="$line"
+    elif [[ -n "$current_node" ]]; then
+        node_details[$current_node]+=$'\n'"$line"
+    fi
+done < <(scontrol show node) # Get full output for all nodes
+
+# Pre-expand all unique nodelists from sinfo and squeue
+# Collect unique nodelists from sinfo
+sinfo_nodelists=$(sinfo -N -o "%10N" | tail -n +2 | sort -u | xargs)
+# Collect unique nodelists from squeue (running jobs)
+squeue_nodelists=$(squeue -h -t R -o "%R" | sort -u | xargs)
+
+all_unique_nodelists=$(echo "$sinfo_nodelists $squeue_nodelists" | tr ' ' '\n' | sort -u | xargs)
+
+for nodelist_range in $all_unique_nodelists; do
+    expanded_nodes=$(scontrol show hostnames "$nodelist_range")
+    expanded_nodelists[$nodelist_range]="$expanded_nodes"
+done
+
+# Pre-populate node_primary_gpu_type and node_partition_map by iterating through sinfo
+while IFS= read -r line; do
+    node_sinfo=$(echo "$line" | awk '{print $1}' | xargs) # Node name from sinfo, might be a range
+    partition=$(echo "$line" | awk '{print $2}')
+
+    # Use pre-expanded nodelists
+    for node in ${expanded_nodelists[$node_sinfo]}; do
+        node_info="${node_details[$node]}" # Use pre-fetched info
+        if [ -z "$node_info" ]; then
+            continue # Skip if no info found for this specific node
         fi
+
+        gres_total_str=$(echo "$node_info" | grep -o 'Gres=[^ ]*' | cut -d= -f2)
+        IFS=',' read -ra gres_parts <<< "$gres_total_str"
+        for part in "${gres_parts[@]}"; do
+            if [[ $part =~ gpu:([^:]+):([0-9]+) ]]; then
+                node_primary_gpu_type[$node]=${BASH_REMATCH[1]}
+                break
+            fi
+        done
+        node_partition_map[$node]="$partition"
     done
-    node_partition_map[$node]="$partition" # Populate node_partition_map here
 done < <(sinfo -N -o "%10N %P %10T"| sort -k1,1 -u)
 
 # Get occupied GPU counts per node, by type, and job time left
 declare -A occupied_gpus_by_type
 declare -A node_min_time_left # Stores minimum time left for jobs on a node in seconds
+declare -A node_job_count # Stores the number of jobs running on each node
 
+# Populate node_job_count
+while IFS= read -r line; do
+    nodelist=$(echo "$line" | awk '{print $1}')
+    # Use pre-expanded nodelists
+    for single_node in ${expanded_nodelists[$nodelist]}; do
+        node_job_count[$single_node]=$(( ${node_job_count[$single_node]:-0} + 1 ))
+    done
+done < <(squeue -h -t R -o "%R") # Get nodelist for each running job
 # Function to convert D-HH:MM:SS or HH:MM:SS to seconds
 time_to_seconds() {
     local time_str="$1"
@@ -82,7 +130,8 @@ while read -r nodelist gpus_alloc time_left; do
 
     job_time_left_seconds=$(time_to_seconds "$time_left")
 
-    for single_node in $(scontrol show hostnames $nodelist); do
+    # Use pre-expanded nodelists
+    for single_node in ${expanded_nodelists[$nodelist]}; do
         current_gpu_type="$job_gpu_type"
         if [[ -z "$current_gpu_type" ]]; then
             # If job_gpu_type is empty (i.e., it was gpu:N format), use the primary GPU type for the node
@@ -102,27 +151,41 @@ while read -r nodelist gpus_alloc time_left; do
         fi
     done
 done < <(squeue -h -t R -o "%R %b %L" | grep "gpu")
-
-
 echo "------------------------------------------------------------------"
 echo "Node Status"
 echo "------------------------------------------------------------------"
 
 # Get node status and format it
 counter=1
-# Process substitution is used here to avoid creating a subshell for the while loop
-# This ensures that the counter variables are updated in the main shell
 while IFS= read -r line; do
-    node=$(echo "$line" | awk '{print $1}')
+    node_sinfo=$(echo "$line" | awk '{print $1}' | xargs) # Node name from sinfo, might be a range
     # Skip header line from sinfo
-    if [[ "$node" == "NODELIST" ]]; then continue; fi
+    if [[ "$node_sinfo" == "NODELIST" ]]; then continue; fi
 
-    ((total_nodes_count++))
     partition=$(echo "$line" | awk '{print $2}')
     state=$(echo "$line" | awk '{print $3}')
 
-    node_info=$(scontrol show node "$node" 2>/dev/null)
-    if [ -z "$node_info" ]; then continue; fi
+    # Expand node ranges from sinfo
+    for node in $(scontrol show hostnames "$node_sinfo"); do
+        # Apply filter if search_term is provided
+        if [[ -n "$search_term" ]]; then
+            local_search_term=$(echo "$search_term" | tr '[:upper:]' '[:lower:]')
+            local_node=$(echo "$node" | tr '[:upper:]' '[:lower:]')
+            local_partition=$(echo "$partition" | tr '[:upper:]' '[:lower:]')
+            local_node_primary_gpu=$(echo "${node_primary_gpu_type[$node]}" | tr '[:upper:]' '[:lower:]')
+
+            if [[ ! ("$local_node" =~ "$local_search_term" || "$local_partition" =~ "$local_search_term" || "$local_node_primary_gpu" =~ "$local_search_term") ]]; then
+                continue # Skip this node if it doesn't match the search term
+            fi
+        fi
+
+        ((total_nodes_count++))
+
+        node_info="${node_details[$node]}" # Use pre-fetched info
+        if [ -z "$node_info" ]; then
+            continue # Skip if no info found for this specific node
+        fi
+
     gres_total_str=$(echo "$node_info" | grep -o 'Gres=[^ ]*' | cut -d= -f2)
     cpu_alloc=$(echo "$node_info" | grep -o 'CPUAlloc=[0-9]*' | cut -d= -f2)
     cpu_tot=$(echo "$node_info" | grep -o 'CPUTot=[0-9]*' | cut -d= -f2)
@@ -253,10 +316,18 @@ while IFS= read -r line; do
         fi
     fi
 
+    # Get job count for the current node
+    current_node_job_count=${node_job_count[$node]:-0}
+    job_count_display=""
+    if (( current_node_job_count > 0 )); then
+        job_count_display=" ($current_node_job_count jobs running)"
+    fi
+
     # Print the final formatted line
-    echo -e "\033[0m($counter) \033[${availability_color_code}m$availability_status \033[1m$node\033[22m, Partition: $partition, State: $state, CPUs: [$node_occupied_cpus/$node_total_cpus], GPUs: $gpus_display_str\033[${likelihood_color_code}m$likelihood_status\033[0m"
+    echo -e "\033[0m($counter) \033[${availability_color_code}m$availability_status \033[1m$node\033[22m, Partition: $partition, State: $state, CPUs: [$node_occupied_cpus/$node_total_cpus], GPUs: $gpus_display_str\033[${likelihood_color_code}m$likelihood_status\033[0m$job_count_display"
     node_map[$counter]="$node" # Store the mapping
     ((counter++))
+    done # End of for node in $(scontrol show hostnames "$node_sinfo")
 done < <(sinfo -N -o "%10N %P %10T" | sort -k1,1 -u)
 
 echo ""
@@ -332,3 +403,21 @@ if [[ -n "$selected_nodes_list" ]]; then
 else
     echo "No nodes selected."
 fi
+<environment_details>
+# VSCode Visible Files
+bin/gpu_status.sh
+
+# VSCode Open Tabs
+.containers/assembly.yaml
+bin/container.sh
+bin/gpu_status.sh
+
+# Current Time
+04/08/2025, 6:52:25 am (Europe/London, UTC+1:00)
+
+# Context Window Usage
+259,072 / 1,048.576K tokens used (25%)
+
+# Current Mode
+ACT MODE
+</environment_details>
