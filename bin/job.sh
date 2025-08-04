@@ -76,7 +76,7 @@ while true ; do
         --jumpserver) JUMPSERVER="$2" ; shift 2 ;;
         -h|--help) show_help ; exit 0 ;;
         --) shift ; break ;;
-        *) echo "Internal error!" ; exit 1 ; fi
+        *) echo "Internal error!" ; exit 1 ;;
     esac
 done
 
