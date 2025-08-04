@@ -77,7 +77,7 @@ while IFS= read -r line; do
         done
         node_partition_map[$node]="$partition"
     done
-done < <(sinfo -N -o "%10N %P %10T"| sort -k1,1 -u)
+done < <(sinfo -N -o "%10N %P %10T" | grep -v '^UnavailableNodes:' | sort -k1,1 -u)
 
 # Get occupied GPU counts per node, by type, and job time left
 declare -A occupied_gpus_by_type
@@ -328,7 +328,7 @@ while IFS= read -r line; do
     node_map[$counter]="$node" # Store the mapping
     ((counter++))
     done # End of for node in $(scontrol show hostnames "$node_sinfo")
-done < <(sinfo -N -o "%10N %P %10T" | sort -k1,1 -u)
+done < <(sinfo -N -o "%10N %P %10T" | grep -v '^UnavailableNodes:' | sort -k1,1 -u)
 
 echo ""
 
@@ -403,21 +403,4 @@ if [[ -n "$selected_nodes_list" ]]; then
 else
     echo "No nodes selected."
 fi
-<environment_details>
-# VSCode Visible Files
-bin/gpu_status.sh
 
-# VSCode Open Tabs
-.containers/assembly.yaml
-bin/container.sh
-bin/gpu_status.sh
-
-# Current Time
-04/08/2025, 6:52:25 am (Europe/London, UTC+1:00)
-
-# Context Window Usage
-259,072 / 1,048.576K tokens used (25%)
-
-# Current Mode
-ACT MODE
-</environment_details>
