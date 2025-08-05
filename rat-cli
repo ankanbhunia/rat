@@ -37,7 +37,7 @@ execute_command() {
         TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
         TIMESTAMP_HUMAN=$(date +"%Y-%m-%d_%H-%M-%S")
         LOG_FILE="$LOG_DIR/log_${SUBCOMMAND}_${TIMESTAMP_HUMAN}.log"
-        nohup "$@" > "$LOG_FILE" 2>&1 &
+        nohup bash "$@" > "$LOG_FILE" 2>&1 &
         PID=$! # Capture the PID of the last background command
         
         echo -e "${BLUE_BG_COLOR}$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
@@ -113,12 +113,15 @@ case "$SUBCOMMAND" in
     zj)
         bash "$SCRIPT_ABS_DIR/bin/zellij.sh" "$@"
         ;;
+    terminal)
+        execute_command "$SCRIPT_ABS_DIR/bin/terminal.sh" "$@"
+        ;;
     container)
         bash "$SCRIPT_ABS_DIR/bin/container.sh" "$@"
         ;;
     *)
         echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Usage: rat-cli [vscode|tunnel|proxy|login|job|sync|uninstall|upgrade|install_vscode|clean|zj|container] [-b|--background] [-- args <>]")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Usage: rat-cli [vscode|tunnel|proxy|login|job|sync|uninstall|upgrade|install_vscode|clean|zj|terminal|container] [-b|--background] [-- args <>]")"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  -b, --background: Run the command in the background.")"
         echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Compact Usage Summary:")"
@@ -133,6 +136,7 @@ case "$SUBCOMMAND" in
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${CYAN_BG_COLOR}install_vscode${RESET_COLOR} --version <VERSION> --arch <ARCHITECTURE>: Installs or updates the VSCode server to a specific version and architecture.")"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${MAGENTA_BG_COLOR}clean${RESET_COLOR}: Stops all running processes started by rat-cli (e.g., VSCode server, tunnels, proxies).")"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${RED_BG_COLOR}zj${RESET_COLOR}: Starts a zellij session, downloading it if not found.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${GREEN_BG_COLOR}terminal${RESET_COLOR} [--port <PORT>] [--jumpserver <user@host>] [--domain <domain>]: Starts a Zellij web client, optionally with a specific port, jumpserver, or domain.")"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${GREEN_BG_COLOR}container${RESET_COLOR} [--create <env_name> | --start <env_name> | --save <env_name> | --list | --delete <env_name>]: Manages Apptainer container environments.")"
         echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "${RESET_COLOR}"
