@@ -21,7 +21,7 @@ usage() {
     echo ""
     echo "Example:"
     echo "  bash ./bin/download_zellij.sh"
-    echo "  bash ./bin/download_zellij.sh --version 0.40.0 --arch x86_64-unknown-linux-musl"
+    echo "  bash ./bin/download_zellij.sh --version 0.43.0 --arch x86_64-unknown-linux-musl"
     exit 0
 }
 
@@ -69,8 +69,18 @@ if [ -z "$ZELLIJ_VERSION" ]; then
         echo -e "\e[31mError: Could not determine the latest Zellij version. Please check your internet connection or the GitHub API.\e[0m"
         exit 1
     fi
-    ZELLIJ_VERSION="$LATEST_RELEASE_TAG"
+    # Ensure the version starts with 'v'
+    if [[ ! "$LATEST_RELEASE_TAG" =~ ^v ]]; then
+        ZELLIJ_VERSION="v$LATEST_RELEASE_TAG"
+    else
+        ZELLIJ_VERSION="$LATEST_RELEASE_TAG"
+    fi
     echo "Latest version found: $ZELLIJ_VERSION"
+fi
+
+# Ensure the provided or fetched version starts with 'v'
+if [[ ! "$ZELLIJ_VERSION" =~ ^v ]]; then
+    ZELLIJ_VERSION="v$ZELLIJ_VERSION"
 fi
 
 echo "Using Zellij version: $ZELLIJ_VERSION"
