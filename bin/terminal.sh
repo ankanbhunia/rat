@@ -10,6 +10,9 @@ SCRIPT_ABS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 # Get the absolute path of the parent directory (rat_copy)
 PARENT_ABS_DIR="$(dirname "$SCRIPT_ABS_DIR")"
 
+# --- Token File Path ---
+ZELLIJ_TOKEN_FILE="$PARENT_ABS_DIR/token.pem"
+
 # --- Cleanup Function ---
 cleanup() {
     echo ""
@@ -37,13 +40,13 @@ trap cleanup SIGINT SIGTERM SIGHUP EXIT
 CLOUDFLARED_BIN="$PARENT_ABS_DIR/cloudflared-linux-amd64" # Define cloudflared path
 BIND_ADDR="127.0.0.1"
 
-echo "CLOUDFLARED_BIN: $CLOUDFLARED_BIN"
 
 # --- Default values ---
 jumpserver=""
 port=""
 domain=""
 help_flag=false
+renew_token_flag=false
 
 # --- Functions ---
 
@@ -60,6 +63,7 @@ usage() {
     echo "                         This is useful if direct port exposure is blocked. Mutually exclusive with --domain."
     echo "  --domain <DOMAIN>      Specify a custom domain for the Cloudflare tunnel (e.g., myterminal.runs.space)."
     echo "                         Requires prior Cloudflare domain setup and 'rat-cli login'. Mutually exclusive with --jumpserver."
+    echo "  --renew-token          Generate a new Zellij web token and save it to the token file."
     echo "  -h, --help             Display this help message and exit."
     echo ""
     echo "Requirements:"
@@ -82,6 +86,7 @@ usage() {
     echo "  rat-cli terminal --jumpserver user@jumpserver.example.com"
     echo "  rat-cli terminal --domain myterminal.runs.space"
     echo "  rat-cli terminal --jumpserver user@jumpserver.example.com --port 8080"
+    echo "  rat-cli terminal --renew-token"
     exit 0
 }
 
@@ -89,6 +94,51 @@ usage() {
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
+
+# Function to display text in a dotted box
+display_in_box() {
+    local text="$1"
+    local len=${#text}
+    local border_len=$((len + 4)) # 2 spaces on each side
+    local horizontal_line=$(printf '─%.0s' $(seq 1 $border_len))
+    local dotted_line=$(printf '─%.0s' $(seq 1 $border_len) | sed 's/─/─ /g' | cut -c 1-$border_len)
+
+    echo ""
+    echo "┌$horizontal_line┐"
+    echo "│  $text  │"
+    echo "└$horizontal_line┘"
+    echo ""
+}
+
+# Function to handle Zellij web token
+handle_zellij_token() {
+    local zellij_cmd="$1"
+    local current_token=""
+
+    if [ -f "$ZELLIJ_TOKEN_FILE" ] && [ "$renew_token_flag" = false ]; then
+        current_token=$(cat "$ZELLIJ_TOKEN_FILE")
+    else
+        # Ensure the directory for the token file exists
+        mkdir -p "$(dirname "$ZELLIJ_TOKEN_FILE")"
+        
+        # Create a new token and capture the output
+        local token_output=$("$zellij_cmd" web --create-token 2>&1)
+        
+        # Extract the token (assuming it's the last line after "token_X: ")
+        new_token=$(echo "$token_output" | grep -oP 'token_[0-9]+: \K[a-f0-9-]+' | tail -n 1)
+        
+        if [ -n "$new_token" ]; then
+            echo "$new_token" > "$ZELLIJ_TOKEN_FILE"
+            chmod 600 "$ZELLIJ_TOKEN_FILE" # Set secure permissions
+            current_token="$new_token"
+        else
+            echo "Error: Failed to create Zellij web token. Output: $token_output"
+            exit 1
+        fi
+    fi
+    echo "$current_token" # Return the token
+}
+
 
 # --- Argument Parsing ---
 while [[ $# -gt 0 ]]; do
@@ -108,6 +158,9 @@ while [[ $# -gt 0 ]]; do
         --domain)
             shift
             domain="$1"
+            ;;
+        --renew-token)
+            renew_token_flag=true
             ;;
         -h|--help)
             help_flag=true
@@ -145,6 +198,17 @@ else
     exit 1
 fi
 
+# Handle Zellij token (create/renew/display)
+ZELLIJ_WEB_TOKEN=$(handle_zellij_token "$ZELLIJ_CMD")
+
+# Display the token in a box
+
+# If only renewing token, exit after handling
+if [ "$renew_token_flag" = true ]; then
+    echo "Token renewal complete. Exiting."
+    exit 0
+fi
+
 # --- Determine Port ---
 if [ -z "$port" ]; then
     PORT=$(($RANDOM%1000+7000))
@@ -156,7 +220,7 @@ fi
 
 # --- Start Zellij Web Client ---
 echo "Starting Zellij web client on $BIND_ADDR:$PORT..."
-ZELLIJ_SOCKET_DIR=/tmp/zellij "$ZELLIJ_CMD" web --port "$PORT"  >> /dev/null 2>&1 &
+ZELLIJ_SOCKET_DIR=/tmp/zellij "$ZELLIJ_CMD" web --port "$PORT" >> /dev/null 2>&1 &
 ZELLIJ_PID=$!
 sleep 2 # Give zellij a moment to start
 
@@ -165,6 +229,8 @@ if ! ps -p "$ZELLIJ_PID" > /dev/null; then
     exit 1
 fi
 echo "Zellij web client started with PID $ZELLIJ_PID."
+
+display_in_box "$ZELLIJ_WEB_TOKEN"
 
 # --- Setup Tunnel ---
 if [ -n "$jumpserver" ]; then
