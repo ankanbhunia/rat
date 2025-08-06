@@ -34,14 +34,14 @@ cleanup() {
 trap cleanup SIGINT SIGTERM SIGHUP EXIT
 
 # --- Configuration ---
-# Automatically select the most recent code-server directory
-echo "SCRIPT_ABS_DIR: $SCRIPT_ABS_DIR"
-echo "PARENT_ABS_DIR: $PARENT_ABS_DIR"
+# # Automatically select the most recent code-server directory
+# echo "SCRIPT_ABS_DIR: $SCRIPT_ABS_DIR"
+# echo "PARENT_ABS_DIR: $PARENT_ABS_DIR"
 
 CODE_SERVER_FULL_PATH=$(ls -d "$PARENT_ABS_DIR"/code-server-*/ 2>/dev/null | sort -V | tail -n 1)
 CODE_SERVER_FULL_PATH=${CODE_SERVER_FULL_PATH%/} # Remove trailing slash
 
-echo "CODE_SERVER_FULL_PATH: $CODE_SERVER_FULL_PATH"
+# echo "CODE_SERVER_FULL_PATH: $CODE_SERVER_FULL_PATH"
 
 if [ -z "$CODE_SERVER_FULL_PATH" ]; then
     echo "Error: No 'code-server-*' directory found in the parent folder."
@@ -56,11 +56,11 @@ USER_DATA_DIR="$PARENT_ABS_DIR/vscode-user-dir"
 EXTENSIONS_DIR="$PARENT_ABS_DIR/vscode-extensions_dir"
 BIND_ADDR="127.0.0.1"
 
-echo "CODE_SERVER_PATH: $CODE_SERVER_PATH"
-echo "CLOUDFLARED_BIN: $CLOUDFLARED_BIN"
-echo "CONFIG_FILE: $CONFIG_FILE"
-echo "USER_DATA_DIR: $USER_DATA_DIR"
-echo "EXTENSIONS_DIR: $EXTENSIONS_DIR"
+# echo "CODE_SERVER_PATH: $CODE_SERVER_PATH"
+# echo "CLOUDFLARED_BIN: $CLOUDFLARED_BIN"
+# echo "CONFIG_FILE: $CONFIG_FILE"
+# echo "USER_DATA_DIR: $USER_DATA_DIR"
+# echo "EXTENSIONS_DIR: $EXTENSIONS_DIR"
 
 # --- Default values ---
 jumpserver=""
