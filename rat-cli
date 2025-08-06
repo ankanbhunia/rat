@@ -20,12 +20,13 @@ set -- "${ARGS[@]}" # Set remaining arguments
 SCRIPT_ABS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # ANSI escape codes for colors and reset
-BLUE_BG_COLOR="\033[44m\033[37m" # Blue background, white text
+BLUE_TEXT_COLOR="\033[34m" # Blue text
 YELLOW_BG_COLOR="\033[43m\033[30m" # Yellow background, black text
 RED_BG_COLOR="\033[41m\033[37m" # Red background, white text
 GREEN_BG_COLOR="\033[42m\033[37m" # Green background, white text
 CYAN_BG_COLOR="\033[46m\033[30m" # Cyan background, black text
 MAGENTA_BG_COLOR="\033[45m\033[37m" # Magenta background, white text
+BRIGHT_GREEN_TEXT_COLOR="\033[38;2;127;255;0m" # Bright Green text (#7FFF00)
 RESET_COLOR="\033[0m" # Reset colors
 LINE_LENGTH=$(tput cols) # Adjust as needed for desired box width
 
@@ -63,23 +64,14 @@ case "$SUBCOMMAND" in
             bash "$SCRIPT_ABS_DIR/bin/job.sh" "$@" 
         fi
         ;;
-    sync)
-        bash "$SCRIPT_ABS_DIR/bin/sync.sh" "$@"
-        ;;
     uninstall)
         bash "$SCRIPT_ABS_DIR/bin/uninstall.sh" "$SCRIPT_ABS_DIR" "$@"
         ;;
     upgrade)
         bash "$SCRIPT_ABS_DIR/bin/upgrade.sh" "$@"
         ;;
-    install_vscode)
-        bash "$SCRIPT_ABS_DIR/bin/install_vscode.sh" "$@"
-        ;;
     clean)
         bash "$SCRIPT_ABS_DIR/bin/clean.sh" "$@"
-        ;;
-    zj)
-        bash "$SCRIPT_ABS_DIR/bin/zellij.sh" "$@"
         ;;
     terminal)
         execute_command "$SCRIPT_ABS_DIR/bin/terminal.sh" "$@"
@@ -89,23 +81,21 @@ case "$SUBCOMMAND" in
         ;;
     *)
         echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Usage: rat-cli [vscode|tunnel|proxy|login|job|sync|uninstall|upgrade|install_vscode|clean|zj|terminal|container] [-b|--background] [-- args <>]")"
+        echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Usage: rat-cli ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}vscode|tunnel|proxy|login|job|uninstall|upgrade|clean|terminal|container -b|--background -- args ${BRIGHT_GREEN_TEXT_COLOR}<>${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  -b, --background: Run the command in the background.")"
         echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Compact Usage Summary:")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${RED_BG_COLOR}login${RESET_COLOR}: Logs into your Cloudflare account and copies the necessary certificate.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${GREEN_BG_COLOR}vscode${RESET_COLOR} [--port <PORT>] [--jumpserver <user@host>] [--domain <domain>]: Starts a VSCode instance, optionally with a specific port, jumpserver, or domain.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${YELLOW_BG_COLOR}tunnel${RESET_COLOR} [--port <PORT>] [--domain <DOMAIN>] [--subpage_path <PATH>] [--protocol <http/ssh>] [--history]: Tunnels a local port to a public Cloudflare URL or lists active tunnels.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${CYAN_BG_COLOR}proxy${RESET_COLOR} --jumpserver <user@host>: Shares internet via a remote proxy server using a jumpserver.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${MAGENTA_BG_COLOR}job${RESET_COLOR} <node_ids> <gpu_nos> <cpu_nos> <domain_username> <node_name>: Submits a SLURM job with specified resources and domain.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${RED_BG_COLOR}sync${RESET_COLOR} <LOCAL_PATH> <REMOTE_PATH> [--jumpserver <user@host>] [--direction <upload/download>]: Synchronizes files/folders between local and remote.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${GREEN_BG_COLOR}uninstall${RESET_COLOR}: Removes rat-cli from PATH and deletes all associated files.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${YELLOW_BG_COLOR}upgrade${RESET_COLOR}: Upgrades rat-cli to the latest version from git.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${CYAN_BG_COLOR}install_vscode${RESET_COLOR} --version <VERSION> --arch <ARCHITECTURE>: Installs or updates the VSCode server to a specific version and architecture.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${MAGENTA_BG_COLOR}clean${RESET_COLOR}: Stops all running processes started by rat-cli (e.g., VSCode server, tunnels, proxies).")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${RED_BG_COLOR}zj${RESET_COLOR}: Starts a zellij session, downloading it if not found.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${GREEN_BG_COLOR}terminal${RESET_COLOR} [--port <PORT>] [--jumpserver <user@host>] [--domain <domain>] [--renew-token]: Starts a Zellij web client, optionally with a specific port, jumpserver, domain, or renews the token.")"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${GREEN_BG_COLOR}container${RESET_COLOR} [--create <env_name> | --start <env_name> | --save <env_name> | --list | --delete <env_name>]: Manages Apptainer container environments.")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${RED_BG_COLOR}login${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${GREEN_BG_COLOR}vscode${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--port${RESET_COLOR} <PORT> ${BLUE_TEXT_COLOR}--jumpserver${RESET_COLOR} <user@host> ${BLUE_TEXT_COLOR}--domain${RESET_COLOR} <domain>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${YELLOW_BG_COLOR}tunnel${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--port${RESET_COLOR} <PORT> ${BLUE_TEXT_COLOR}--domain${RESET_COLOR} <DOMAIN> ${BLUE_TEXT_COLOR}--subpage_path${RESET_COLOR} <PATH> ${BLUE_TEXT_COLOR}--protocol${RESET_COLOR} <http/ssh>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--history${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${CYAN_BG_COLOR}proxy${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--jumpserver${RESET_COLOR} <user@host>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--clean${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${MAGENTA_BG_COLOR}job${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--node-ids${RESET_COLOR} <IDS> ${BLUE_TEXT_COLOR}--name${RESET_COLOR} <NAME> ${BLUE_TEXT_COLOR}--nodes${RESET_COLOR} <NUM> ${BLUE_TEXT_COLOR}--partition${RESET_COLOR} <NAME> ${BLUE_TEXT_COLOR}--time${RESET_COLOR} <TIME> ${BLUE_TEXT_COLOR}--gpu-nos${RESET_COLOR} <NUM> ${BLUE_TEXT_COLOR}--cpu-nos${RESET_COLOR} <NUM> ${BLUE_TEXT_COLOR}--domain${RESET_COLOR} <DOMAIN> ${BLUE_TEXT_COLOR}--jumpserver${RESET_COLOR} <SERVER>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--usage${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${RED_BG_COLOR}uninstall${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${YELLOW_BG_COLOR}upgrade${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${MAGENTA_BG_COLOR}clean${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${CYAN_BG_COLOR}terminal${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--port${RESET_COLOR} <PORT> ${BLUE_TEXT_COLOR}--jumpserver${RESET_COLOR} <user@host> ${BLUE_TEXT_COLOR}--domain${RESET_COLOR} <domain>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--renew-token${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--show-token${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${YELLOW_BG_COLOR}container${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--create${RESET_COLOR} <env_name>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--start${RESET_COLOR} <env_name>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--save${RESET_COLOR} <env_name>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--list${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--delete${RESET_COLOR} <env_name>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
         echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "${RESET_COLOR}"
         exit 1
