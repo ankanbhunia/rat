@@ -47,6 +47,7 @@ port=""
 domain=""
 help_flag=false
 renew_token_flag=false
+show_token_flag=false
 
 # --- Functions ---
 
@@ -64,6 +65,7 @@ usage() {
     echo "  --domain <DOMAIN>      Specify a custom domain for the Cloudflare tunnel (e.g., myterminal.runs.space)."
     echo "                         Requires prior Cloudflare domain setup and 'rat-cli login'. Mutually exclusive with --jumpserver."
     echo "  --renew-token          Generate a new Zellij web token and save it to the token file."
+    echo "  --show-token           Display the current Zellij web token."
     echo "  -h, --help             Display this help message and exit."
     echo ""
     echo "Requirements:"
@@ -87,6 +89,7 @@ usage() {
     echo "  rat-cli terminal --domain myterminal.runs.space"
     echo "  rat-cli terminal --jumpserver user@jumpserver.example.com --port 8080"
     echo "  rat-cli terminal --renew-token"
+    echo "  rat-cli terminal --show-token"
     exit 0
 }
 
@@ -162,6 +165,9 @@ while [[ $# -gt 0 ]]; do
         --renew-token)
             renew_token_flag=true
             ;;
+        --show-token)
+            show_token_flag=true
+            ;;
         -h|--help)
             help_flag=true
             ;;
@@ -206,6 +212,12 @@ ZELLIJ_WEB_TOKEN=$(handle_zellij_token "$ZELLIJ_CMD")
 # If only renewing token, exit after handling
 if [ "$renew_token_flag" = true ]; then
     echo "Token renewal complete. Exiting."
+    exit 0
+fi
+
+# If only showing token, display it and exit
+if [ "$show_token_flag" = true ]; then
+    display_in_box "$ZELLIJ_WEB_TOKEN"
     exit 0
 fi
 
