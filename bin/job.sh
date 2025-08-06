@@ -138,9 +138,9 @@ bash "$PARENT_ABS_DIR"/bin/send_mail.sh "${DOMAIN}" "${GPU_NOS}" "${TIME}" "SLUR
 
 # Call rat-cli vscode with the appropriate arguments
 if [ -n "$JUMPSERVER" ]; then
-    "$PARENT_ABS_DIR"/rat-cli vscode --domain "${DOMAIN}" --jumpserver "${JUMPSERVER}"
+    "$PARENT_ABS_DIR"/rat-cli terminal --domain "${DOMAIN}" --jumpserver "${JUMPSERVER}"
 else
-    "$PARENT_ABS_DIR"/rat-cli vscode --domain "${DOMAIN}"
+    "$PARENT_ABS_DIR"/rat-cli terminal --domain "${DOMAIN}"
 fi
 
 
