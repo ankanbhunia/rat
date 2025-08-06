@@ -149,7 +149,7 @@ if "$history_flag"; then
                 if [ "$diff_minutes" -gt 0 ]; then
                     time_string+="${diff_minutes} min"
                     [ "$diff_minutes" -ne 1 ] && time_string+="s"
-                    time_string+=" "
+                    time_string+=" " 
                 fi
                 # Removed seconds as per user request
                 # time_string+="${diff_seconds_final} sec"
