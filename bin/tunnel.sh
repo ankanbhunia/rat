@@ -16,6 +16,7 @@ usage() {
     echo "Options:"
     echo "  --port <PORT>         The local port to expose. (Required for new tunnels)"
     echo "  --domain <DOMAIN>     (Optional) A custom domain to use for the tunnel (e.g., myapp.runs.space)."
+    echo "                        Supports wildcard domains (e.g., `*.to2.run`) for random subdomain generation."
     echo "                        Requires prior Cloudflare domain setup and 'rat-cli login'."
     echo "  --subpage_path <PATH> (Optional) A path to append to the tunnel URL (e.g., for sharing a specific file)."
     echo "  --protocol <PROTOCOL> (Optional) The protocol for the tunnel service (e.g., http, ssh). Default: http"
@@ -30,6 +31,7 @@ usage() {
     echo "Examples:"
     echo "  rat-cli tunnel --port 8000"
     echo "  rat-cli tunnel --port 3000 --domain myapp.runs.space"
+    echo "  rat-cli tunnel --port 3000 --domain *.to2.run"
     echo "  rat-cli tunnel --port 22 --domain mymachine.runs.space --protocol ssh"
     echo "  rat-cli tunnel --port 8080 --subpage_path my_report.pdf"
     exit 0
@@ -209,6 +211,32 @@ if [ ! -n "$port" ]; then
 fi
 
 if [ -n "$domain" ]; then
+  # Check if the domain contains a wildcard
+  if [[ "$domain" == *"*"* ]]; then
+    # Generate machine name, sanitize for domain name (lowercase, alphanumeric, hyphens)
+    MACHINE_NAME=$(hostname | cut -d'.' -f1 | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/^-*//;s/-*$//')
+
+    # List of memorizable words
+    MEMORIZABLE_WORDS=(
+      "apple" "baker" "cloud" "dream" "eagle" "flame" "grape" "honey" "ivory" "jolly"
+      "kiwi" "lemon" "mango" "night" "ocean" "peach" "queen" "river" "sunny" "tiger"
+      "unity" "vivid" "whale" "xenon" "yield" "zebra" "alpha" "bravo" "delta" "echo"
+      "frost" "glory" "helix" "ideal" "jumbo" "krypton" "lunar" "magic" "noble" "oasis"
+      "prism" "quest" "radiant" "spark" "titan" "ultra" "vortex" "wonder" "xylem" "yacht"
+      "zenith" "amber" "bliss" "charm" "dawn" "ember" "fable" "gale" "haven" "indigo"
+      "jewel" "karma" "lumen" "mystic" "nova" "opal" "pixel" "quartz" "relic" "sable"
+      "topaz" "umbra" "valor" "whirl" "xenia" "yonder" "zest"
+    )
+    # Get a random index
+    RANDOM_INDEX=$(( RANDOM % ${#MEMORIZABLE_WORDS[@]} ))
+    RANDOM_WORD=${MEMORIZABLE_WORDS[$RANDOM_INDEX]}
+
+
+    SUB_DOMAIN_PART="${MACHINE_NAME}-${RANDOM_WORD}"
+    # Replace the wildcard '*' in the original domain with the generated subdomain part
+    domain="${domain/\*/${SUB_DOMAIN_PART}}"
+    echo "Generated random domain: ${domain}"
+  fi
 
   TUNNEL_NAME=${domain}
   mkdir -p "$PARENT_ABS_DIR"/tunnels/${TUNNEL_NAME}
@@ -232,7 +260,7 @@ ingress:
     exit 1  # Exit with an error code
   fi
   date_time=$(date +"%Y-%m-%d %H:%M:%S")
-  echo "$date_time: $1 --> https://${domain}" >> host.log
+  echo "$date_time: ${domain} --> https://${domain}" >> host.log
 
 
   highlight_url "${protocol}://${domain}/${subpage_path}"
