@@ -1,3 +1,5 @@
+![image](doc.png)
+
 ## Installation
 
 This guide covers the complete setup of `@rat` including `vscode` and tunneling capabilities.
