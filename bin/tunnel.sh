@@ -80,6 +80,14 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+# Get the absolute path of the current script's directory
+SCRIPT_ABS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+# Get the absolute path of the parent directory (rat_copy)
+PARENT_ABS_DIR="$(dirname "$SCRIPT_ABS_DIR")"
+
+cd "$PARENT_ABS_DIR"
+export TUNNEL_ORIGIN_CERT=cert.pem
+
 if "$help_flag"; then
     usage
 fi
@@ -109,8 +117,8 @@ if "$history_flag"; then
             # Remove 'Z' and replace 'T' with space
             clean_created_at=$(echo "$created_at" | sed 's/T/ /' | sed 's/Z//')
 
-            # Convert created_at to epoch time
-            created_epoch=$(date -d "$clean_created_at" +%s)
+            # Convert created_at to epoch time, explicitly treating it as UTC
+            created_epoch=$(date -d "$clean_created_at UTC" +%s)
             
             # Get current epoch time
             current_epoch=$(date +%s)
@@ -129,7 +137,7 @@ if "$history_flag"; then
             # Only show tunnels up to 365 days old
             if [ "$diff_days" -le 365 ]; then
                 # Filter out disconnected tunnels older than 1 day
-                if [[ -z "$connections" || "$connections" == "0" ]] && [ "$diff_days" -gt 1 ]; then
+                if [[ -z "$connections" || "$connections" == "0" ]] && [ "$diff_seconds" -gt 300 ]; then
                     continue # Skip this tunnel
                 fi
 
@@ -180,13 +188,7 @@ if "$history_flag"; then
     exit 0
 fi
 
-# Get the absolute path of the current script's directory
-SCRIPT_ABS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-# Get the absolute path of the parent directory (rat_copy)
-PARENT_ABS_DIR="$(dirname "$SCRIPT_ABS_DIR")"
 
-cd "$PARENT_ABS_DIR"
-export TUNNEL_ORIGIN_CERT=cert.pem
 #echo $(pwd)
 
 if [ ! -f "$TUNNEL_ORIGIN_CERT" ]; then
