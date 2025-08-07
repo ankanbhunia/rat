@@ -26,27 +26,120 @@ else
     read -e -p "Enter default data directory to mount (default: $RAT_HOME/data): " DATA_DIR_INPUT
     DATA_DIR="${DATA_DIR_INPUT:-$RAT_HOME/data}"
 
+    read -e -p "Enter default Apptainer prefix (default: apptainer shell --nv --writable --fakeroot): " APPTAINER_PREFIX_INPUT
+    APPTAINER_PREFIX="${APPTAINER_PREFIX_INPUT:-apptainer shell --nv --writable --fakeroot}"
+
     echo "Default configuration saved to $CONTAINERS_DIR/default.sh"
     cat << EOF > "$CONTAINERS_DIR/default.sh"
 SANDBOX_BASE_DIR="$SANDBOX_BASE_DIR"
 SIF_CACHE_DIR="$SIF_CACHE_DIR"
 CODE_DIR="$CODE_DIR"
 DATA_DIR="$DATA_DIR"
+APPTAINER_PREFIX="$APPTAINER_PREFIX"
 EOF
 
     source "$CONTAINERS_DIR/default.sh"
 fi
 
+# Function to strip ANSI escape codes and calculate visible string length
+get_visible_length() {
+    echo "$1" | sed 's/\x1b\[[0-9;]*[mGKH]//g' | wc -c | xargs
+}
+
+# Define colors and reset
+COLOR_CYAN=$(tput setaf 6) # Cyan foreground color
+COLOR_YELLOW=$(tput setaf 3) # Yellow foreground color
+COLOR_RESET=$(tput sgr0)
+
+# Box dimensions
+BOX_WIDTH=100 # Total width including borders
+BOX_HORIZONTAL_LINE=$(printf '─%.0s' $(seq 1 $((BOX_WIDTH - 2)))) # Unicode horizontal line
+BOX_TOP_LEFT="╭"
+BOX_TOP_RIGHT="╮"
+BOX_BOTTOM_LEFT="╰"
+BOX_BOTTOM_RIGHT="╯"
+BOX_VERTICAL_LINE="│"
+
+# Fallback to ASCII if unicode is not supported or causes issues
+if ! echo -e "\u2500" | grep -q "─"; then
+    BOX_HORIZONTAL_LINE=$(printf '-%.0s' $(seq 1 $((BOX_WIDTH - 2))))
+    BOX_TOP_LEFT="+"
+    BOX_TOP_RIGHT="+"
+    BOX_BOTTOM_LEFT="+"
+    BOX_BOTTOM_RIGHT="+"
+    BOX_VERTICAL_LINE="|"
+fi
+
+# Function to print a line within the box (cyan)
+print_box_line() {
+    local text="$1"
+    local visible_text_length=$(get_visible_length "$text")
+    local content_width=$((BOX_WIDTH - 2))
+    local padding_length=$((content_width - visible_text_length))
+    
+    if [ "$padding_length" -lt 0 ]; then
+        padding_length=0
+    fi
+    local padding=$(printf ' %.0s' $(seq 1 "$padding_length"))
+    printf "${COLOR_CYAN}${BOX_VERTICAL_LINE}%s%s${BOX_VERTICAL_LINE}${COLOR_RESET}\n" "$text" "$padding"
+}
+
+# Function to print a line within the box (yellow)
+print_box_line_yellow() {
+    local text="$1"
+    local visible_text_length=$(get_visible_length "$text")
+    local content_width=$((BOX_WIDTH - 2))
+    local padding_length=$((content_width - visible_text_length))
+    
+    if [ "$padding_length" -lt 0 ]; then
+        padding_length=0
+    fi
+    local padding=$(printf ' %.0s' $(seq 1 "$padding_length"))
+    printf "${COLOR_YELLOW}${BOX_VERTICAL_LINE}%s%s${BOX_VERTICAL_LINE}${COLOR_RESET}\n" "$text" "$padding"
+}
+
+# Function to display config file content in a yellow box
+display_config_file_content() {
+    local config_file="$1"
+    local box_horizontal_line_yellow=$(printf '─%.0s' $(seq 1 $((BOX_WIDTH - 2))))
+    local box_top_left_yellow="╭"
+    local box_top_right_yellow="╮"
+    local box_bottom_left_yellow="╰"
+    local box_bottom_right_yellow="╯"
+    local box_vertical_line_yellow="│"
+
+    if ! echo -e "\u2500" | grep -q "─"; then
+        box_horizontal_line_yellow=$(printf '-%.0s' $(seq 1 $((BOX_WIDTH - 2))))
+        box_top_left_yellow="+"
+        box_top_right_yellow="+"
+        box_bottom_left_yellow="+"
+        box_bottom_right_yellow="+"
+        box_vertical_line_yellow="|"
+    fi
+
+    echo ""
+    echo "Content of $config_file:"
+    echo "${COLOR_YELLOW}${box_top_left_yellow}${box_horizontal_line_yellow}${box_top_right_yellow}${COLOR_RESET}"    
+    # Read file content line by line and print within the box
+    while IFS= read -r line; do
+        print_box_line_yellow "$line"
+    done < "$config_file"
+
+    echo "${COLOR_YELLOW}${box_bottom_left_yellow}${box_horizontal_line_yellow}${box_bottom_right_yellow}${COLOR_RESET}"
+    echo ""
+}
+
 echo ""
-echo "-------------------------------------------------------------------"
-echo "Default Configuration Values:"
-echo "  SANDBOX_BASE_DIR: $SANDBOX_BASE_DIR"
-echo "  SIF_CACHE_DIR:    $SIF_CACHE_DIR"
-echo "  CODE_DIR:         $CODE_DIR"
-echo "  DATA_DIR:         $DATA_DIR"
-echo ""
+echo "${COLOR_CYAN}${BOX_TOP_LEFT}${BOX_HORIZONTAL_LINE}${BOX_TOP_RIGHT}${COLOR_RESET}"
+print_box_line "Default Configuration Values:"
+print_box_line "  SANDBOX_BASE_DIR: $SANDBOX_BASE_DIR"
+print_box_line "  SIF_CACHE_DIR:    $SIF_CACHE_DIR"
+print_box_line "  CODE_DIR:         $CODE_DIR"
+print_box_line "  DATA_DIR:         $DATA_DIR"
+print_box_line "  APPTAINER_PREFIX: $APPTAINER_PREFIX"
+echo "${COLOR_CYAN}${BOX_BOTTOM_LEFT}${BOX_HORIZONTAL_LINE}${BOX_BOTTOM_RIGHT}${COLOR_RESET}"
 echo "To change these defaults, edit the file: $CONTAINERS_DIR/default.sh"
-echo "-------------------------------------------------------------------"
+echo ""
 
 # Function to check if apptainer is available
 check_apptainer() {
@@ -271,7 +364,7 @@ container_create() {
     #     exit 1
     # fi
 
-    local apptainer_prefix_value="apptainer shell --nv --writable --fakeroot"
+    local apptainer_prefix_value="${APPTAINER_PREFIX:-apptainer shell --nv --writable --fakeroot}"
 
     echo "base_image: $base_image_input_for_new_config" > "$config_file"
     echo "sandbox_folder: $sandbox_folder" >> "$config_file"
@@ -279,12 +372,7 @@ container_create() {
     [ -n "$data_directory" ] && echo "data_directory: $data_directory" >> "$config_file"
     echo "apptainer_prefix: $apptainer_prefix_value" >> "$config_file"
 
-    echo "Config file created: $config_file"
-    echo "----------------------------------------"
-    echo "Content of $config_file:"
-    echo "----------------------------------------"
-    cat "$config_file"
-    echo "----------------------------------------"
+    display_config_file_content "$config_file"
 
     # Call perform_build for new environment creation
     perform_build "$env_name" "$config_file" "$base_image_input_for_new_config" "$sandbox_folder" "$code_directory" "$data_directory" "$apptainer_prefix_value"
@@ -371,11 +459,7 @@ container_save() {
         if [ $? -ne 0 ]; then
             echo "Warning: Failed to update base_image in config file."
         fi
-        echo "----------------------------------------"
-        echo "Updated content of $config_file:"
-        echo "----------------------------------------"
-        cat "$config_file"
-        echo "----------------------------------------"
+        display_config_file_content "$config_file"
     else
         echo "Warning: Config file '$config_file' not found, skipping base_image update."
     fi
@@ -452,11 +536,7 @@ container_copy() {
         exit 1
     fi
 
-    echo "----------------------------------------"
-    echo "Content of new config file: $new_config_file"
-    echo "----------------------------------------"
-    cat "$new_config_file"
-    echo "----------------------------------------"
+    display_config_file_content "$new_config_file"
 
     echo "Copying sandbox directory from '$SOURCE_SANDBOX_FOLDER' to '$new_sandbox_folder'..."
     local start_time=$(date +%s)
