@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 port=""
 domain=""
 subpage_path=""
@@ -84,6 +85,9 @@ done
 SCRIPT_ABS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 # Get the absolute path of the parent directory (rat_copy)
 PARENT_ABS_DIR="$(dirname "$SCRIPT_ABS_DIR")"
+
+mkdir -p "${PARENT_ABS_DIR}/.logs"
+
 
 cd "$PARENT_ABS_DIR"
 export TUNNEL_ORIGIN_CERT=cert.pem
