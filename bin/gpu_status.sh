@@ -399,8 +399,9 @@ if [[ -n "$selected_nodes_list" ]]; then
     if (( min_available_gpus < 0 )); then min_available_gpus=0; fi
     if (( min_available_cpus < 0 )); then min_available_cpus=0; fi
 
-    echo -e "\nTo run a job on the selected nodes, use a command like:\n  rat-cli job --node-ids \"$selected_nodes_list\" --name \"my_job\" --nodes 1 --partition \"$selected_partition\" --time \"7-00:00:00\" --gpu-nos $min_available_gpus --cpu-nos $min_available_cpus --domain your.domain.here --jumpserver user@example.com\nRemember to replace 'your.domain.here' with your actual domain and adjust other parameters as needed."
+    echo "───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+    echo "rat-cli job --node-ids \"$selected_nodes_list\" --name \"my_job\" --nodes 1 --partition \"$selected_partition\" --time \"7-00:00:00\" --gpu-nos $min_available_gpus --cpu-nos $min_available_cpus --domain your.domain.here --jumpserver user@example.com"
+    echo "───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
 else
     echo "No nodes selected."
 fi
-
