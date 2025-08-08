@@ -14,7 +14,7 @@ chmod -R +x rat
 cd rat
 bash ./bin/install_vscode.sh --version 4.22.1 --arch linux-amd64
 bash ./bin/download_cloudflared.sh --version 2025.7.0 --arch linux-amd64
-bash ./bin/download_zellij.sh --version 0.43.0 --arch x86_64-unknown-linux-musl
+bash ./bin/download_zellij.sh --version 0.43.1 --arch x86_64-unknown-linux-musl
 
 # Make rat-cli accessible from anywhere (for Bash users)
 echo "export PATH=\"$(pwd):\$PATH\"" >> ~/.bashrc
