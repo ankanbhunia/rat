@@ -79,10 +79,13 @@ case "$SUBCOMMAND" in
     container)
         bash "$SCRIPT_ABS_DIR/bin/container.sh" "$@"
         ;;
+    debug)
+        execute_command "$SCRIPT_ABS_DIR/bin/debug.sh" "$@"
+        ;;
     *)
         echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
-        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Usage: rat-cli ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}vscode|tunnel|proxy|login|job|uninstall|upgrade|clean|terminal|container -b|--background -- args ${BRIGHT_GREEN_TEXT_COLOR}<>${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Usage: rat-cli ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}vscode|tunnel|proxy|login|job|uninstall|upgrade|clean|terminal|container|debug -b|--background -- args ${BRIGHT_GREEN_TEXT_COLOR}<>${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  -b, --background: Run the command in the background.")"
         echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "Compact Usage Summary:")"
@@ -96,6 +99,7 @@ case "$SUBCOMMAND" in
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${MAGENTA_BG_COLOR}clean${RESET_COLOR}")"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${CYAN_BG_COLOR}terminal${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--port${RESET_COLOR} <PORT> ${BLUE_TEXT_COLOR}--jumpserver${RESET_COLOR} <user@host> ${BLUE_TEXT_COLOR}--domain${RESET_COLOR} <domain>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--renew-token${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--show-token${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
         echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${YELLOW_BG_COLOR}container${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--create${RESET_COLOR} <env_name>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--start${RESET_COLOR} <env_name>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--save${RESET_COLOR} <env_name>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--list${RESET_COLOR}${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--delete${RESET_COLOR} <env_name>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}|${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--copy${RESET_COLOR} <source_env_name> <new_env_name>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR}")"
+        echo -e "$(printf '%-*s' $((LINE_LENGTH)) "  rat-cli ${CYAN_BG_COLOR}debug${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}[${RESET_COLOR}${BLUE_TEXT_COLOR}--jumpserver${RESET_COLOR} <user@host> ${BLUE_TEXT_COLOR}--port${RESET_COLOR} <PORT>${BRIGHT_GREEN_TEXT_COLOR}]${RESET_COLOR} ${BRIGHT_GREEN_TEXT_COLOR}<PYTHON_CMD>${RESET_COLOR}")"
         echo -e "$(printf '─%.0s' $(seq 1 $LINE_LENGTH))"
         echo -e "${RESET_COLOR}"
         exit 1
