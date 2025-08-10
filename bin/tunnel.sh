@@ -8,6 +8,17 @@ protocol="http"
 help_flag=false
 history_flag=false
 
+# Check for dependencies: jq and base64
+if ! command -v jq &> /dev/null; then
+  echo "Error: jq is required but not installed."
+  exit 1
+fi
+
+if ! command -v base64 &> /dev/null; then
+  echo "Error: base64 command not found."
+  exit 1
+fi
+
 # Function to display script usage
 usage() {
     echo "Usage: rat-cli tunnel --port <PORT> [OPTIONS]"
@@ -216,34 +227,8 @@ if [ ! -n "$port" ]; then
     usage
 fi
 
+
 if [ -n "$domain" ]; then
-  # Check if the domain contains a wildcard
-  if [[ "$domain" == *"*"* ]]; then
-    # Generate machine name, sanitize for domain name (lowercase, alphanumeric, hyphens)
-    MACHINE_NAME=$(hostname | cut -d'.' -f1 | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/^-*//;s/-*$//')
-
-    # List of memorizable words
-    MEMORIZABLE_WORDS=(
-      "apple" "baker" "cloud" "dream" "eagle" "flame" "grape" "honey" "ivory" "jolly"
-      "kiwi" "lemon" "mango" "night" "ocean" "peach" "queen" "river" "sunny" "tiger"
-      "unity" "vivid" "whale" "xenon" "yield" "zebra" "alpha" "bravo" "delta" "echo"
-      "frost" "glory" "helix" "ideal" "jumbo" "krypton" "lunar" "magic" "noble" "oasis"
-      "prism" "quest" "radiant" "spark" "titan" "ultra" "vortex" "wonder" "xylem" "yacht"
-      "zenith" "amber" "bliss" "charm" "dawn" "ember" "fable" "gale" "haven" "indigo"
-      "jewel" "karma" "lumen" "mystic" "nova" "opal" "pixel" "quartz" "relic" "sable"
-      "topaz" "umbra" "valor" "whirl" "xenia" "yonder" "zest"
-    )
-    # Get a random index
-    RANDOM_INDEX=$(( RANDOM % ${#MEMORIZABLE_WORDS[@]} ))
-    RANDOM_WORD=${MEMORIZABLE_WORDS[$RANDOM_INDEX]}
-
-
-    SUB_DOMAIN_PART="${MACHINE_NAME}-${RANDOM_WORD}"
-    # Replace the wildcard '*' in the original domain with the generated subdomain part
-    domain="${domain/\*/${SUB_DOMAIN_PART}}"
-    echo "Generated random domain: ${domain}"
-  fi
-
   TUNNEL_NAME=${domain}
   mkdir -p "$PARENT_ABS_DIR"/tunnels/${TUNNEL_NAME}
 
