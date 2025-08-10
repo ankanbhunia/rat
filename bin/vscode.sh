@@ -195,8 +195,23 @@ if [ -n "$jumpserver" ]; then
         exit 1
     fi
     # Assuming the remote tunnel script path is fixed as per original script
-    ssh -R "${PORT}:localhost:${PORT}" "$jumpserver" "rat-cli tunnel --port ${PORT} --domain ${domain}"
-    SSH_PID=$!
+    # If no domain is specified with jumpserver, generate a random one
+    if [ -z "$domain" ]; then
+        source "$PARENT_ABS_DIR"/bin/random_domain_generator.sh
+        generated_domain=$(generate_random_domain "${PARENT_ABS_DIR}/cert.pem" vscode)
+        if [ $? -eq 0 ] && [ -n "$generated_domain" ]; then
+            echo "Generated random domain for jumpserver tunnel: $generated_domain"
+            domain="$generated_domain" # Use the generated domain
+            ssh -R "${PORT}:localhost:${PORT}" "$jumpserver" "rat-cli tunnel --port ${PORT} --domain ${domain}"
+            SSH_PID=$!
+        else
+            echo "Warning: Random domain generation failed or returned empty for jumpserver tunnel. Proceeding without a specific domain."
+            ssh -R "${PORT}:localhost:${PORT}" "$jumpserver" "rat-cli tunnel --port ${PORT}"
+        fi
+    fi
+
+    # Assuming the remote tunnel script path is fixed as per original script
+
     echo "SSH tunnel initiated with PID $SSH_PID. Check SSH logs for connection status."
 elif [ -n "$domain" ]; then
     echo "Starting tunnel for domain $domain on port $PORT..."
