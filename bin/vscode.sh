@@ -205,13 +205,13 @@ elif [ -n "$domain" ]; then
     echo "Tunnel initiated with PID $TUNNEL_PID."
 else
     source "$PARENT_ABS_DIR"/bin/random_domain_generator.sh
-    domain=$(generate_random_domain vscode)
+    domain=$(generate_random_domain "${PARENT_ABS_DIR}/cert.pem" vscode)
     if [ $? -eq 0 ] && [ -n "$domain" ]; then
         echo "Starting tunnel for port $PORT with generated domain: $domain..."
-        "$SCRIPT_ABS_DIR"/tunnel.sh --domain "${domain}" --port "${PORT}"  --subpage_path $(hostname -s)
+        "$SCRIPT_ABS_DIR"/tunnel.sh --domain "${domain}" --port "${PORT}" 
     else
         echo "Starting tunnel for port $PORT (no domain specified, random domain generation failed or returned empty)..."
-        "$SCRIPT_ABS_DIR"/tunnel.sh --port "${PORT}"  --subpage_path $(hostname -s)
+        "$SCRIPT_ABS_DIR"/tunnel.sh --port "${PORT}"
     fi
     TUNNEL_PID=$!
     echo "Tunnel initiated with PID $TUNNEL_PID."
