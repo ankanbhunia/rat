@@ -5,42 +5,6 @@ SCRIPT_ABS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 RAT_HOME="$(dirname "$SCRIPT_ABS_DIR")"
 CONTAINERS_DIR="$RAT_HOME/.containers"
 
-# Source the default configuration file
-if [ -f "$CONTAINERS_DIR/default.sh" ]; then
-    source "$CONTAINERS_DIR/default.sh"
-else
-    echo "Warning: $CONTAINERS_DIR/default.sh not found. Creating a new default configuration file."
-    
-    mkdir -p "$CONTAINERS_DIR"
-
-    # Prompt for variables and set defaults
-    read -e -p "Enter default sandbox base directory (default: $RAT_HOME/.sandboxes): " SANDBOX_BASE_DIR_INPUT
-    SANDBOX_BASE_DIR="${SANDBOX_BASE_DIR_INPUT:-$RAT_HOME/.sandboxes}"
-
-    read -e -p "Enter default SIF cache directory (default: $RAT_HOME/.sif_cache): " SIF_CACHE_DIR_INPUT
-    SIF_CACHE_DIR="${SIF_CACHE_DIR_INPUT:-$RAT_HOME/.sif_cache}"
-
-    read -e -p "Enter default code directory to mount (default: $RAT_HOME/code): " CODE_DIR_INPUT
-    CODE_DIR="${CODE_DIR_INPUT:-$RAT_HOME/code}"
-
-    read -e -p "Enter default data directory to mount (default: $RAT_HOME/data): " DATA_DIR_INPUT
-    DATA_DIR="${DATA_DIR_INPUT:-$RAT_HOME/data}"
-
-    read -e -p "Enter default Apptainer prefix (default: apptainer shell --nv --writable --fakeroot): " APPTAINER_PREFIX_INPUT
-    APPTAINER_PREFIX="${APPTAINER_PREFIX_INPUT:-apptainer shell --nv --writable --fakeroot}"
-
-    echo "Default configuration saved to $CONTAINERS_DIR/default.sh"
-    cat << EOF > "$CONTAINERS_DIR/default.sh"
-SANDBOX_BASE_DIR="$SANDBOX_BASE_DIR"
-SIF_CACHE_DIR="$SIF_CACHE_DIR"
-CODE_DIR="$CODE_DIR"
-DATA_DIR="$DATA_DIR"
-APPTAINER_PREFIX="$APPTAINER_PREFIX"
-EOF
-
-    source "$CONTAINERS_DIR/default.sh"
-fi
-
 # Function to strip ANSI escape codes and calculate visible string length
 get_visible_length() {
     echo "$1" | sed 's/\x1b\[[0-9;]*[mGKH]//g' | wc -c | xargs
@@ -129,17 +93,6 @@ display_config_file_content() {
     echo ""
 }
 
-echo ""
-echo "${COLOR_CYAN}${BOX_TOP_LEFT}${BOX_HORIZONTAL_LINE}${BOX_TOP_RIGHT}${COLOR_RESET}"
-print_box_line "Default Configuration Values:"
-print_box_line "  SANDBOX_BASE_DIR: $SANDBOX_BASE_DIR"
-print_box_line "  SIF_CACHE_DIR:    $SIF_CACHE_DIR"
-print_box_line "  CODE_DIR:         $CODE_DIR"
-print_box_line "  DATA_DIR:         $DATA_DIR"
-print_box_line "  APPTAINER_PREFIX: $APPTAINER_PREFIX"
-echo "${COLOR_CYAN}${BOX_BOTTOM_LEFT}${BOX_HORIZONTAL_LINE}${BOX_BOTTOM_RIGHT}${COLOR_RESET}"
-echo "To change these defaults, edit the file: $CONTAINERS_DIR/default.sh"
-echo ""
 
 # Function to check if apptainer is available
 check_apptainer() {
@@ -168,6 +121,7 @@ perform_build() {
     local code_directory=$5
     local data_directory=$6
     local apptainer_prefix_value=$7
+    local sif_cache_dir_value=$8 # New parameter for SIF_CACHE_DIR
 
     local image_source=""
     local image_type="" # Infer image type within this function
@@ -189,7 +143,7 @@ perform_build() {
         image_source="$base_image_from_config"
     elif [[ "$image_type" == "1" ]]; then # Public direct SIF link
         local sif_filename=$(basename "$base_image_from_config")
-        local cached_sif_path="$SIF_CACHE_DIR/$sif_filename"
+        local cached_sif_path="$sif_cache_dir_value/$sif_filename"
         image_source="$cached_sif_path" # This is the source for apptainer build
         
         if [ ! -f "$cached_sif_path" ]; then
@@ -216,7 +170,7 @@ perform_build() {
         local remote_file_path_only=$(echo "$remote_sif_full_path" | cut -d':' -f2-)
         
         local sif_filename=$(basename "$remote_file_path_only") # Correctly extract filename from path only
-        local cached_sif_path="$SIF_CACHE_DIR/$sif_filename"
+        local cached_sif_path="$sif_cache_dir_value/$sif_filename"
         image_source="$cached_sif_path" # This is the source for apptainer build
 
         if [ ! -f "$cached_sif_path" ]; then
@@ -301,32 +255,25 @@ container_create() {
     fi
 
     mkdir -p "$CONTAINERS_DIR"
-    mkdir -p "$SANDBOX_BASE_DIR"
+
+    local SIF_CACHE_DIR="$RAT_HOME/.sif_cache"
+
     mkdir -p "$SIF_CACHE_DIR"
 
     local config_file="$CONTAINERS_DIR/$env_name.yaml"
     if [ -f "$config_file" ]; then
-        echo "Error: Environment '$env_name' already exists. The config file '$config_file' already exists."
-        echo "What would you like to do?"
-        echo "1) Discard the current config and create a new one"
-        echo "2) Rebuild from the current config (skip to download/build)"
-        echo "3) Abort"
-        read -p "Enter choice (1, 2, or 3): " existing_config_choice
+        echo "Error: Environment '$env_name' already exists. The config file '$config_file' already exists."   
+        read -p "Would you like to rebuild from the current config? (y/n): " existing_config_choice
 
         case "$existing_config_choice" in
-            1)
-                echo "Discarding existing config and creating a new one."
-                rm "$config_file"
-                # Continue with the rest of container_create, which will write a new config
-                ;;
-            2)
+            [yY])
                 echo "Rebuilding from existing config."
                 read_config "$env_name" # This populates global BASE_IMAGE, SANDBOX_FOLDER etc.
-                perform_build "$env_name" "$config_file" "$BASE_IMAGE" "$SANDBOX_FOLDER" "$CODE_DIRECTORY" "$DATA_DIRECTORY" "$APPTAINER_PREFIX"
+                perform_build "$env_name" "$config_file" "$BASE_IMAGE" "$SANDBOX_FOLDER" "$CODE_DIRECTORY" "$DATA_DIRECTORY" "$APPTAINER_PREFIX" "$SIF_CACHE_DIR"
                 echo "You can now run 'rat-cli container --start $env_name' to enter the container."
                 exit 0
                 ;;
-            3)
+            [nN])
                 echo "Aborting."
                 exit 1
                 ;;
@@ -341,41 +288,56 @@ container_create() {
 
     read -p "Enter base image (e.g., https://.../image.sif, /path/to/image.sif, user@host:/path/to/image.sif, ubuntu:latest): " base_image_input_for_new_config
 
-    local default_base_directory="$SANDBOX_BASE_DIR" # Default base directory for sandboxes
-    # read -e -p "Enter base directory for sandbox (default: $default_base_directory): " base_directory_input
-    local base_directory="${base_directory_input:-$default_base_directory}"
+    read -e -p "Enter base directory for sandbox (default: $RAT_HOME/.sandboxes): " BASE_DIRECTORY_INPUT
+    local base_directory="${BASE_DIRECTORY_INPUT:-$RAT_HOME/.sandboxes}"
 
     # Generate a unique directory name for the sandbox within the base directory
     local random_suffix=$(uuidgen)
     local sandbox_folder="$base_directory/$env_name-$random_suffix"
 
-    local code_directory="$CODE_DIR"
-    local data_directory="$DATA_DIR"
+    local code_directory=""
+    for i in {1..3}; do
+        read -e -p "Enter code directory to mount (default: $RAT_HOME/code): " CODE_DIR_INPUT
+        code_directory="${CODE_DIR_INPUT:-$RAT_HOME/code}"
+        if [ -z "$code_directory" ] || [ -d "$code_directory" ]; then
+            break
+        else
+            echo "Error: Code directory '$code_directory' does not exist. Please provide a valid path (Attempt $i/3)."
+        fi
+    done
+    if [ ! -d "$code_directory" ]; then
+        echo "Warning: Code directory '$code_directory' still does not exist after 3 attempts. Proceeding without mounting a code directory."
+        code_directory=""
+    fi
 
-    # read -e -p "Enter code directory to mount (optional): " code_directory
-    # if [ -n "$code_directory" ] && [ ! -d "$code_directory" ]; then
-    #     echo "Error: Code directory '$code_directory' does not exist. Please provide a valid path."
-    #     exit 1
-    # fi
+    local data_directory=""
+    for i in {1..3}; do
+        read -e -p "Enter data directory to mount (default: $RAT_HOME/data): " DATA_DIR_INPUT
+        data_directory="${DATA_DIR_INPUT:-$RAT_HOME/data}"
+        if [ -z "$data_directory" ] || [ -d "$data_directory" ]; then
+            break
+        else
+            echo "Error: Data directory '$data_directory' does not exist. Please provide a valid path (Attempt $i/3)."
+        fi
+    done
+    if [ ! -d "$data_directory" ]; then
+        echo "Warning: Data directory '$data_directory' still does not exist after 3 attempts. Proceeding without mounting a data directory."
+        data_directory=""
+    fi
 
-    # read -e -p "Enter data directory to mount (optional): " data_directory
-    # if [ -n "$data_directory" ] && [ ! -d "$data_directory" ]; then
-    #     echo "Error: Data directory '$data_directory' does not exist. Please provide a valid path."
-    #     exit 1
-    # fi
-
-    local apptainer_prefix_value="${APPTAINER_PREFIX:-apptainer shell --nv --writable --fakeroot}"
+    read -e -p "Enter Apptainer prefix (default: apptainer shell --nv --writable --fakeroot): " APPTAINER_PREFIX_INPUT
+    local apptainer_prefix_value="${APPTAINER_PREFIX_INPUT:-apptainer shell --nv --writable --fakeroot}"
 
     echo "base_image: $base_image_input_for_new_config" > "$config_file"
     echo "sandbox_folder: $sandbox_folder" >> "$config_file"
-    [ -n "$code_directory" ] && echo "code_directory: $code_directory" >> "$config_file"
-    [ -n "$data_directory" ] && echo "data_directory: $data_directory" >> "$config_file"
+    echo "code_directory: $code_directory" >> "$config_file"
+    echo "data_directory: $data_directory" >> "$config_file"
     echo "apptainer_prefix: $apptainer_prefix_value" >> "$config_file"
 
     display_config_file_content "$config_file"
 
     # Call perform_build for new environment creation
-    perform_build "$env_name" "$config_file" "$base_image_input_for_new_config" "$sandbox_folder" "$code_directory" "$data_directory" "$apptainer_prefix_value"
+    perform_build "$env_name" "$config_file" "$base_image_input_for_new_config" "$sandbox_folder" "$code_directory" "$data_directory" "$apptainer_prefix_value" "$SIF_CACHE_DIR"
 }
 
 # Subcommand: start
@@ -594,6 +556,37 @@ container_list() {
     done
 }
 
+# Subcommand: edit
+container_edit() {
+    local env_name=$1
+    if [ -z "$env_name" ]; then
+        echo "Usage: rat-cli container --edit <env_name>"
+        exit 1
+    fi
+
+    local config_file="$CONTAINERS_DIR/$env_name.yaml"
+    if [ ! -f "$config_file" ]; then
+        echo "Error: Environment '$env_name' not found. Config file '$config_file' does not exist."
+        exit 1
+    fi
+
+    echo "Opening config file '$config_file' for editing..."
+    if command -v code &> /dev/null; then
+        nano "$config_file"
+    else
+        # Fallback to vi if code is not available
+        vi "$config_file"
+    fi
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to open or edit config file."
+        exit 1
+    fi
+
+    echo "Config file '$config_file' updated."
+    display_config_file_content "$config_file"
+}
+
 # Subcommand: delete
 container_delete() {
     check_apptainer
@@ -660,8 +653,12 @@ case "$1" in
         shift
         container_copy "$@"
         ;;
+    --edit)
+        shift
+        container_edit "$@"
+        ;;
     *)
-        echo "Usage: rat-cli container [--create <env_name> | --start <env_name> | --save <env_name> | --list | --delete <env_name> | --copy <source_env_name> <new_env_name>]"
+        echo "Usage: rat-cli container [--create <env_name> | --start <env_name> | --save <env_name> | --list | --delete <env_name> | --copy <source_env_name> <new_env_name> | --edit <env_name>]"
         exit 1
         ;;
 esac
