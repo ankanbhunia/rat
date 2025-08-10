@@ -20,7 +20,7 @@ show_help() {
     echo "  --time <TIME>          SLURM walltime (e.g., 7-00:00:00). (Default: $DEFAULT_TIME)"
     echo "  --gpu-nos <NUM>        Number of GPUs required for the job. (Optional)"
     echo "  --cpu-nos <NUM>        Number of CPUs required for the job. (Default: $DEFAULT_CPU_NOS)"
-    echo "  --domain <DOMAIN>      Full domain for the VSCode tunnel. (Required)"
+    echo "  --domain <DOMAIN>      Full domain for the VSCode tunnel. (Optional)"
     echo "  --jumpserver <SERVER>  Jumpserver address for the VSCode tunnel. (Optional)"
     echo "  -h, --help             Display this help message and exit."
     echo "  --usage                Show a summary of GPU usage on available nodes and exit."
@@ -63,6 +63,10 @@ CPU_NOS="$DEFAULT_CPU_NOS"
 DOMAIN="" # Initialize DOMAIN as empty
 JUMPSERVER="" # Initialize JUMPSERVER as empty
 
+RANDOM_PORT=$(( ( RANDOM % 10000 ) + 10000 )) # Generate a random port between 10000 and 19999
+export http_proxy="http://localhost:$RANDOM_PORT"
+export https_proxy="http://localhost:$RANDOM_PORT"
+
 while true ; do
     case "$1" in
         --node-ids) NODE_IDS="$2" ; shift 2 ;;
@@ -80,12 +84,6 @@ while true ; do
     esac
 done
 
-# Check if DOMAIN is provided
-if [ -z "$DOMAIN" ]; then
-    echo "Error: --domain is a required argument."
-    show_help
-    exit 1
-fi
 
 # Get the absolute path of the current script's directory
 SCRIPT_ABS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
@@ -112,7 +110,10 @@ if [ -n "$GPU_NOS" ]; then
 fi
 
 # Construct the command for rat-cli vscode
-VSCODE_COMMAND="$PARENT_ABS_DIR/rat-cli vscode --domain \"${DOMAIN}\""
+VSCODE_COMMAND="$PARENT_ABS_DIR/rat-cli vscode"
+if [ -n "$DOMAIN" ]; then
+    VSCODE_COMMAND="${VSCODE_COMMAND} --domain \"${DOMAIN}\""
+fi
 if [ -n "$JUMPSERVER" ]; then
     VSCODE_COMMAND="${VSCODE_COMMAND} --jumpserver \"${JUMPSERVER}\""
 fi
@@ -138,11 +139,18 @@ bash "$PARENT_ABS_DIR"/bin/send_mail.sh "${DOMAIN}" "${GPU_NOS}" "${TIME}" "SLUR
 
 # Call rat-cli vscode with the appropriate arguments
 if [ -n "$JUMPSERVER" ]; then
-    "$PARENT_ABS_DIR"/rat-cli terminal --domain "${DOMAIN}" --jumpserver "${JUMPSERVER}"
+    nohup ssh -tt -L "$RANDOM_PORT:localhost:$RANDOM_PORT" "$JUMPSERVER" bash -l <<_EOF_ > /dev/null 2>&1 &
+fuser -k $RANDOM_PORT/tcp 2>/dev/null
+echo "Remote proxy started on port $RANDOM_PORT..."
+~/.local/bin/proxy --port $RANDOM_PORT
+_EOF_
+    "$PARENT_ABS_DIR"/rat-cli terminal \
+        $( [ -n "$DOMAIN" ] && echo "--domain \"${DOMAIN}\"" ) \
+        --jumpserver "${JUMPSERVER}"
 else
-    "$PARENT_ABS_DIR"/rat-cli terminal --domain "${DOMAIN}"
+    "$PARENT_ABS_DIR"/rat-cli terminal \
+        $( [ -n "$DOMAIN" ] && echo "--domain \"${DOMAIN}\"" )
 fi
-
 
 EOT
 
@@ -151,7 +159,7 @@ echo "Generated SLURM script:"
 cat $TEMP_SCRIPT
 
 # Submit the temporary SLURM script
-sbatch $TEMP_SCRIPT
+sbatch --export=http_proxy,https_proxy $TEMP_SCRIPT
 
 # Clean up the temporary script
 rm $TEMP_SCRIPT
