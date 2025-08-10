@@ -272,14 +272,14 @@ ingress:
   highlight_url "${protocol}://${domain}/${subpage_path}"
   echo -e "\e[33mCheck tunnel logs at: ${PARENT_ABS_DIR}/.logs/tunnel_${domain}_${port}.log\e[0m"
 
-  ./cloudflared-linux-amd64 tunnel --config  "$PARENT_ABS_DIR"/tunnels/${TUNNEL_NAME}/config_${port}.yml run ${tunnel_id} &> .logs/tunnel_${domain}_${port}.log
+  ./cloudflared-linux-amd64 tunnel  --protocol http2  --config  "$PARENT_ABS_DIR"/tunnels/${TUNNEL_NAME}/config_${port}.yml run ${tunnel_id} &> .logs/tunnel_${domain}_${port}.log
 
 else 
 
   log_file=".logs/tunnel_trycloudflare_${port}.log"
   rm -f "$log_file"
 
-  ./cloudflared-linux-amd64 tunnel --url http://localhost:${port} --logfile "$log_file" &> .logs/tunnel_trycloudflare_${port}.log &
+  ./cloudflared-linux-amd64 tunnel  --protocol http2 --url http://localhost:${port} --logfile "$log_file" &> .logs/tunnel_trycloudflare_${port}.log &
 
   sleep 1
   while :; do
