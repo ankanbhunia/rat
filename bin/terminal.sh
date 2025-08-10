@@ -245,6 +245,8 @@ echo "Zellij web client started with PID $ZELLIJ_PID."
 display_in_box "$ZELLIJ_WEB_TOKEN"
 
 # --- Setup Tunnel ---
+
+# --- Setup Tunnel ---
 if [ -n "$jumpserver" ]; then
     echo "Attempting to establish reverse tunnel via $jumpserver for port $PORT..."
     if ! command_exists "ssh"; then
@@ -252,28 +254,43 @@ if [ -n "$jumpserver" ]; then
         exit 1
     fi
     # Assuming the remote tunnel script path is fixed as per original script
-    ssh -R "${PORT}:localhost:${PORT}" "$jumpserver" "rat-cli tunnel --port ${PORT} --domain ${domain} --subpage_path $(hostname -s)"
-    SSH_PID=$!
+    # If no domain is specified with jumpserver, generate a random one
+    if [ -z "$domain" ]; then
+        source "$PARENT_ABS_DIR"/bin/random_domain_generator.sh
+        generated_domain=$(generate_random_domain "${PARENT_ABS_DIR}/cert.pem" terminal)
+        if [ $? -eq 0 ] && [ -n "$generated_domain" ]; then
+            echo "Generated random domain for jumpserver tunnel: $generated_domain"
+            domain="$generated_domain" # Use the generated domain
+            ssh -R "${PORT}:localhost:${PORT}" "$jumpserver" "rat-cli tunnel --port ${PORT} --domain ${domain} --subpage_path $(hostname -s)"
+            SSH_PID=$!
+        else
+            echo "Warning: Random domain generation failed or returned empty for jumpserver tunnel. Proceeding without a specific domain."
+            ssh -R "${PORT}:localhost:${PORT}" "$jumpserver" "rat-cli tunnel --port ${PORT} --subpage_path $(hostname -s)"
+        fi
+    fi
+
+    # Assuming the remote tunnel script path is fixed as per original script
+
     echo "SSH tunnel initiated with PID $SSH_PID. Check SSH logs for connection status."
 elif [ -n "$domain" ]; then
     echo "Starting tunnel for domain $domain on port $PORT..."
-    "$SCRIPT_ABS_DIR"/tunnel.sh --domain "${domain}" --port "${PORT}"  --subpage_path $(hostname -s)
+    "$SCRIPT_ABS_DIR"/tunnel.sh --domain "${domain}" --port "${PORT}" --subpage_path $(hostname -s)
     TUNNEL_PID=$!
     echo "Tunnel initiated with PID $TUNNEL_PID."
 else
     source "$PARENT_ABS_DIR"/bin/random_domain_generator.sh
-    domain=$(generate_random_domain  "${PARENT_ABS_DIR}/cert.pem" terminal)
+    domain=$(generate_random_domain "${PARENT_ABS_DIR}/cert.pem" terminal)
     if [ $? -eq 0 ] && [ -n "$domain" ]; then
         echo "Starting tunnel for port $PORT with generated domain: $domain..."
-        "$SCRIPT_ABS_DIR"/tunnel.sh --domain "${domain}" --port "${PORT}"  --subpage_path $(hostname -s)
+        "$SCRIPT_ABS_DIR"/tunnel.sh --domain "${domain}" --port "${PORT}" --subpage_path $(hostname -s)
     else
         echo "Starting tunnel for port $PORT (no domain specified, random domain generation failed or returned empty)..."
-        "$SCRIPT_ABS_DIR"/tunnel.sh --port "${PORT}"  --subpage_path $(hostname -s)
+        "$SCRIPT_ABS_DIR"/tunnel.sh --port "${PORT}" --subpage_path $(hostname -s)
     fi
     TUNNEL_PID=$!
     echo "Tunnel initiated with PID $TUNNEL_PID."
 fi
 
-echo "Script finished. Zellij web client and tunnel (if applicable) are running in the foreground."
+echo "Script finished. terminal server and tunnel (if applicable) are running in the foreground."
 echo "They will be automatically terminated upon script exit."
 echo "You can check 'host.log' or 'cloudflare_log' for tunnel status if applicable."
