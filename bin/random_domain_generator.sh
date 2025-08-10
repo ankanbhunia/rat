@@ -1,8 +1,8 @@
 #!/bin/bash
 
 generate_random_domain() {
-  local TUNNEL_ORIGIN_CERT="cert.pem"
-  local keyword="$1" # Capture the first argument as keyword
+  local TUNNEL_ORIGIN_CERT="$1"
+  local keyword="$2" # Capture the first argument as keyword
 
   # Check file existence
   if [ ! -f "$TUNNEL_ORIGIN_CERT" ]; then
