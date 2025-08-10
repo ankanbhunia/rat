@@ -252,17 +252,17 @@ if [ -n "$jumpserver" ]; then
         exit 1
     fi
     # Assuming the remote tunnel script path is fixed as per original script
-    ssh -R "${PORT}:localhost:${PORT}" "$jumpserver" "rat-cli tunnel --port ${PORT} --domain ${domain}"
+    ssh -R "${PORT}:localhost:${PORT}" "$jumpserver" "rat-cli tunnel --port ${PORT} --domain ${domain} --subpage_path $(hostname -s)"
     SSH_PID=$!
     echo "SSH tunnel initiated with PID $SSH_PID. Check SSH logs for connection status."
 elif [ -n "$domain" ]; then
     echo "Starting tunnel for domain $domain on port $PORT..."
-    "$SCRIPT_ABS_DIR"/tunnel.sh --domain "${domain}" --port "${PORT}"
+    "$SCRIPT_ABS_DIR"/tunnel.sh --domain "${domain}" --port "${PORT}"  --subpage_path $(hostname -s)
     TUNNEL_PID=$!
     echo "Tunnel initiated with PID $TUNNEL_PID."
 else
     echo "Starting tunnel for port $PORT (no domain specified)..."
-    "$SCRIPT_ABS_DIR"/tunnel.sh --port "${PORT}"
+    "$SCRIPT_ABS_DIR"/tunnel.sh --port "${PORT}"  --subpage_path $(hostname -s)
     TUNNEL_PID=$!
     echo "Tunnel initiated with PID $TUNNEL_PID."
 fi
