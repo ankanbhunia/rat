@@ -262,7 +262,7 @@ elif [ -n "$domain" ]; then
     echo "Tunnel initiated with PID $TUNNEL_PID."
 else
     source "$PARENT_ABS_DIR"/bin/random_domain_generator.sh
-    domain=$(generate_random_domain terminal)
+    domain=$(generate_random_domain  "${PARENT_ABS_DIR}/cert.pem" terminal)
     if [ $? -eq 0 ] && [ -n "$domain" ]; then
         echo "Starting tunnel for port $PORT with generated domain: $domain..."
         "$SCRIPT_ABS_DIR"/tunnel.sh --domain "${domain}" --port "${PORT}"  --subpage_path $(hostname -s)
