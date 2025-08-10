@@ -267,6 +267,9 @@ if [ -n "$jumpserver" ]; then
             echo "Warning: Random domain generation failed or returned empty for jumpserver tunnel. Proceeding without a specific domain."
             ssh -R "${PORT}:localhost:${PORT}" "$jumpserver" "rat-cli tunnel --port ${PORT} --subpage_path $(hostname -s)"
         fi
+    else
+        ssh -R "${PORT}:localhost:${PORT}" "$jumpserver" "rat-cli tunnel --port ${PORT} --domain ${domain} --subpage_path $(hostname -s)"
+
     fi
 
     # Assuming the remote tunnel script path is fixed as per original script
