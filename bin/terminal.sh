@@ -232,7 +232,11 @@ fi
 
 # --- Start Zellij Web Client ---
 echo "Starting Zellij web client on $BIND_ADDR:$PORT..."
-"$ZELLIJ_CMD" web --port "$PORT" >> /dev/null 2>&1 &
+
+
+mkdir -p "/dev/shm/zellij-$USER"
+
+ZELLIJ_SOCKET_DIR="/dev/shm/zellij-$USER" "$ZELLIJ_CMD" web --port "$PORT" >> /dev/null 2>&1 &
 ZELLIJ_PID=$!
 sleep 2 # Give zellij a moment to start
 
