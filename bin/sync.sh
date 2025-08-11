@@ -60,7 +60,37 @@ if [[ -z "$LOCAL_PATH" || -z "$REMOTE_PATH" ]]; then
 fi
 
 # Construct rsync command
-RSYNC_COMMAND="rsync -avz"
+RSYNC_COMMAND="rsync -avz --info=progress2"
+
+# Add common exclusions
+RSYNC_COMMAND+=" --exclude='.git/'"
+RSYNC_COMMAND+=" --exclude='__pycache__/'"
+RSYNC_COMMAND+=" --exclude='*.pyc'"
+RSYNC_COMMAND+=" --exclude='*.pyo'"
+RSYNC_COMMAND+=" --exclude='*.pyd'"
+RSYNC_COMMAND+=" --exclude='*.egg-info/'"
+RSYNC_COMMAND+=" --exclude='build/'"
+RSYNC_COMMAND+=" --exclude='dist/'"
+RSYNC_COMMAND+=" --exclude='.ipynb_checkpoints/'"
+RSYNC_COMMAND+=" --exclude='.mypy_cache/'"
+RSYNC_COMMAND+=" --exclude='.pytest_cache/'"
+RSYNC_COMMAND+=" --exclude='.cache/'"
+
+# Check for .gitignore in the local path's root
+GITIGNORE_FILE=""
+if [[ -d "$LOCAL_PATH" && -f "$LOCAL_PATH/.gitignore" ]]; then
+    GITIGNORE_FILE="$LOCAL_PATH/.gitignore"
+elif [[ -f "$LOCAL_PATH" ]]; then
+    # If LOCAL_PATH is a file, check its parent directory for .gitignore
+    PARENT_DIR=$(dirname "$LOCAL_PATH")
+    if [[ -f "$PARENT_DIR/.gitignore" ]]; then
+        GITIGNORE_FILE="$PARENT_DIR/.gitignore"
+    fi
+fi
+
+if [[ -n "$GITIGNORE_FILE" ]]; then
+    RSYNC_COMMAND+=" --exclude-from=\"$GITIGNORE_FILE\""
+fi
 
 if [[ -n "$JUMPSERVER" ]]; then
     RSYNC_COMMAND+=" -e \"ssh $JUMPSERVER\""
@@ -79,6 +109,13 @@ else
 fi
 
 echo "Executing: $RSYNC_COMMAND"
+
+if [[ "$DIRECTION" == "upload" ]]; then
+    echo "Synchronizing from \"$LOCAL_PATH\" to \"$REMOTE_PATH\""
+elif [[ "$DIRECTION" == "download" ]]; then
+    echo "Synchronizing from \"$REMOTE_PATH\" to \"$LOCAL_PATH\""
+fi
+
 eval $RSYNC_COMMAND
 
 if [[ $? -eq 0 ]]; then
