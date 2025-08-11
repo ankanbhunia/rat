@@ -73,6 +73,9 @@ case "$SUBCOMMAND" in
     clean)
         bash "$SCRIPT_ABS_DIR/bin/clean.sh" "$@"
         ;;
+    sync)
+        bash "$SCRIPT_ABS_DIR/bin/sync.sh" "$@"
+        ;;
     terminal)
         execute_command "$SCRIPT_ABS_DIR/bin/terminal.sh" "$@"
         ;;
