@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: ./debug.sh --jumpserver <user@host> --port <port> <python_cmd_and_args...>
+# Usage: ./debug.sh [--jumpserver <user@host>] [--port <port>] <python_cmd_and_args...>
 # Example:
 # ./debug.sh --jumpserver user@login-node-name --port 48949 -m torch.distributed.launch --nproc_per_node=1 --master_port 48949 test.py
 
@@ -25,11 +25,6 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
-if [ -z "$JUMPSERVER" ]; then
-    echo "Error: --jumpserver is required."
-    exit 1
-fi
-
 if [ -z "$PORT" ]; then
     # Find a free random port between 2000 and 65000 if not provided
     PORT=$(shuf -i 2000-65000 -n 1)
@@ -46,10 +41,14 @@ DEBUGPY_PID=$!
 
 echo "[INFO] debugpy is listening on port $PORT"
 
-# Start SSH reverse tunnel in foreground (for password prompt and logs)
-ssh -NR $PORT:localhost:$PORT "$JUMPSERVER"
-
-# When tunnel closes, kill debugpy
-kill $DEBUGPY_PID 2>/dev/null
-
-echo "[INFO] debugpy exited, tunnel closed."
+if [ -n "$JUMPSERVER" ]; then
+    # Start SSH reverse tunnel in foreground (for password prompt and logs)
+    ssh -NR $PORT:localhost:$PORT "$JUMPSERVER"
+    # When tunnel closes, kill debugpy
+    kill $DEBUGPY_PID 2>/dev/null
+    echo "[INFO] debugpy exited, tunnel closed."
+else
+    # Wait for debugpy process to exit naturally
+    wait $DEBUGPY_PID
+    echo "[INFO] debugpy exited."
+fi
