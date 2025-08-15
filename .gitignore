@@ -7,3 +7,4 @@ tunnels/
 config.yaml
 cloudflared-linux-amd64
 zellij
+.domain
