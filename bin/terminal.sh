@@ -261,7 +261,7 @@ if [ -n "$jumpserver" ]; then
     # If no domain is specified with jumpserver, generate a random one
     if [ -z "$domain" ]; then
         source "$PARENT_ABS_DIR"/bin/random_domain_generator.sh
-        generated_domain=$(generate_random_domain "${PARENT_ABS_DIR}/cert.pem" terminal)
+        generated_domain=$(generate_random_domain "${PARENT_ABS_DIR}/.domain" terminal)
         if [ $? -eq 0 ] && [ -n "$generated_domain" ]; then
             echo "Generated random domain for jumpserver tunnel: $generated_domain"
             domain="$generated_domain" # Use the generated domain
@@ -286,7 +286,7 @@ elif [ -n "$domain" ]; then
     echo "Tunnel initiated with PID $TUNNEL_PID."
 else
     source "$PARENT_ABS_DIR"/bin/random_domain_generator.sh
-    domain=$(generate_random_domain "${PARENT_ABS_DIR}/cert.pem" terminal)
+    domain=$(generate_random_domain "${PARENT_ABS_DIR}/.domain" terminal)
     if [ $? -eq 0 ] && [ -n "$domain" ]; then
         echo "Starting tunnel for port $PORT with generated domain: $domain..."
         "$SCRIPT_ABS_DIR"/tunnel.sh --domain "${domain}" --port "${PORT}" --subpage_path $(hostname -s)
