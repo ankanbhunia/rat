@@ -5,6 +5,7 @@ DEFAULT_JOB_NAME="exp"
 DEFAULT_PARTITION="PGR-Standard"
 DEFAULT_TIME="7-00:00:00"
 DEFAULT_CPU_NOS=20
+DEFAULT_MEM="64G" # Default memory
 
 # Function to display help message
 show_help() {
@@ -20,6 +21,7 @@ show_help() {
     echo "  --time <TIME>          SLURM walltime (e.g., 7-00:00:00). (Default: $DEFAULT_TIME)"
     echo "  --gpu-nos <NUM>        Number of GPUs required for the job. (Optional)"
     echo "  --cpu-nos <NUM>        Number of CPUs required for the job. (Default: $DEFAULT_CPU_NOS)"
+    echo "  --mem <SIZE>           Memory required per node (e.g., 10G, 500M). (Default: $DEFAULT_MEM)"
     echo "  --domain <DOMAIN>      Full domain for the VSCode tunnel. (Optional)"
     echo "  --jumpserver <SERVER>  Jumpserver address for the VSCode tunnel. (Optional)"
     echo "  -h, --help             Display this help message and exit."
@@ -40,14 +42,13 @@ show_help() {
     echo ""
     echo "Examples:"
     echo "  rat-cli job --node-ids crannog01,crannog02,crannog03 --gpu-nos 1 --cpu-nos 20 --domain crannog0x.runs.space --jumpserver user@example.com"
-    echo "  rat-cli job --node-ids crannog05 --gpu-nos 2 --cpu-nos 30 --jumpserver user@example.com"
+    echo "  rat-cli job --node-ids crannog05 --gpu-nos 2 --cpu-nos 30 --mem 64G --jumpserver user@example.com"
     echo "  rat-cli job --usage"
 }
 
 
 # Parse command-line arguments
-TEMP=$(getopt -o h --long node-ids:,name:,nodes:,partition:,time:,gpu-nos:,cpu-nos:,domain:,jumpserver:,help -n 'rat-cli job' -- "$@")
-
+TEMP=$(getopt -o h --long node-ids:,name:,nodes:,partition:,time:,gpu-nos:,cpu-nos:,mem:,domain:,jumpserver:,help,usage -n 'rat-cli job' -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around '$TEMP': they are essential!
@@ -60,6 +61,7 @@ PARTITION="$DEFAULT_PARTITION"
 TIME="$DEFAULT_TIME"
 GPU_NOS="" # Make GPU_NOS optional
 CPU_NOS="$DEFAULT_CPU_NOS"
+MEM="$DEFAULT_MEM" # Initialize MEM with default
 DOMAIN="" # Initialize DOMAIN as empty
 JUMPSERVER="" # Initialize JUMPSERVER as empty
 
@@ -76,9 +78,11 @@ while true ; do
         --time) TIME="$2" ; shift 2 ;;
         --gpu-nos) GPU_NOS="$2" ; shift 2 ;;
         --cpu-nos) CPU_NOS="$2" ; shift 2 ;;
+        --mem) MEM="$2" ; shift 2 ;; # Parse memory argument
         --domain) DOMAIN="$2" ; shift 2 ;;
         --jumpserver) JUMPSERVER="$2" ; shift 2 ;;
         -h|--help) show_help ; exit 0 ;;
+        --usage) "$PARENT_ABS_DIR"/rat-cli gpu-status ; exit 0 ;;
         --) shift ; break ;;
         *) echo "Internal error!" ; exit 1 ;;
     esac
@@ -126,6 +130,7 @@ ${NODES_SLURM}
 ${NODE_LIST_SLURM}     # Node list (optional)
 ${GPU_NOS_SLURM}       # Number of GPUs required (optional)
 #SBATCH --cpus-per-task=${CPU_NOS}  # Number of CPUs required
+#SBATCH --mem=${MEM}                # Memory required per node
 #SBATCH --partition=${PARTITION}
 #SBATCH --time=${TIME}           # Walltime
 
