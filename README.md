@@ -12,7 +12,7 @@ This step clones the repository, installs the VSCode server and extensions, and 
 git clone https://github.com/ankanbhunia/rat.git
 chmod -R +x rat
 cd rat
-bash ./bin/install_vscode.sh --version 4.22.1 --arch linux-amd64
+bash ./bin/install_vscode.sh --version 4.103.2 --arch linux-amd64
 bash ./bin/download_cloudflared.sh --version 2025.7.0 --arch linux-amd64
 bash ./bin/download_zellij.sh --version 0.43.1 --arch x86_64-unknown-linux-musl
 
